@@ -1,0 +1,1 @@
+rsjetstruct is a python module for calculating the spectra of gamma ray burst afterglow reverse shocks for a structured jet model devised by Zhang, Wang, and Zheng 2024. Spectral shapes are calculated using Granot and Sari 2002.
