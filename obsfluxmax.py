@@ -5,7 +5,6 @@ Created on Tue Jun  3 15:41:42 2025
 @author: rohdo
 """
 import numpy as np
-from spectrum import Spectrum
 
 smallNum = 1e-50 # 1e-50 # a very small number close to zero
 

@@ -7,10 +7,9 @@ Created on Thu Jul  3 15:54:41 2025
 
 import numpy as np
 
-from spectrum import Spectrum
+from .gsspectshapes import Spectrum
 from multidimcurvefit import chi2pdof, numParams, gof
 import scipy.optimize as sciopt
-from inspect import signature
 
 def pl(x, F, a): # 2 params
      """"""

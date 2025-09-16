@@ -4,12 +4,43 @@ Created on Wed May 28 10:19:34 2025
 
 @author: rohdo
 """
-
-import scipy
 import numpy as np
-from spectrum import Spectrum
-from obsfluxmax import *
+from .gsspectshapes import Spectrum
+#from obsfluxmax import *
 import warnings
+
+smallNum = 1e-50 # a very small number close to zero
+def obsFluxMax(Fnumax_nossa, nuac, nusa, num, nuc, p):
+    """computes the observed maximum flux from the theoretical maximum if no
+    synchrotron self absorption were to occur.
+    """
+    F1 = Fnumax_nossa * (nuac <= nusa <= num <= nuc) # spectrum 1
+    F2 = Fnumax_nossa * (nusa/num)**(-(p - 1)/2)*(nuac <= num <= nusa <= nuc)     # spectrum 2
+    F3 = Fnumax_nossa * (nuc/num)**(-(p - 1)/2) * (nusa/nuc)**(-p/2) * (nuac <= nusa and num <= nusa and nuc <= nusa and num <= nuc) + \
+         Fnumax_nossa * (num/nuc)**(-1/2) * (nusa/num)**(-p/2) * (nuac <= nusa and num <= nusa and nuc <= nusa and num > nuc)  # spectrum 3
+    F4 = Fnumax_nossa * (nusa/nuc)**(-1/2) * (nuac <= nusa and nuc <= nusa and nusa <= num) # spectrum 4
+    F5 = Fnumax_nossa * (nuac <= nusa <= nuc <= num) # spectrum 5
+    if (sum(np.array([nuac > nusa])) > 0):
+        warnings.warn("nuac must be smaller than nusa", RuntimeWarning)
+    if (sum(np.array([F1, F2, F3, F4, F5])) == 0):
+        warnings.warn("No cases satisfied in obsFluxMax, flux returned is zero! Check input parameters.", RuntimeWarning)
+    return F1 + F2 + F3 + F4 + F5
+
+    # if nuac <= nusa <= num <= nuc: # spectrum 1
+    #     return Fnumax_nossa
+    # elif nuac <= num <= nusa <= nuc: # spectrum 2
+    #     return Fnumax_nossa * (nusa/num)**(-(p - 1)/2)
+    # elif nuac <= nusa and num <= nusa and nuc <= nusa: # spectrum 3
+    #     if num <= nuc:
+    #         return Fnumax_nossa * (nuc/num)**(-(p - 1)/2) * (nusa/nuc)**(-p/2)
+    #     else:
+    #         return Fnumax_nossa * (num/nuc)**(-1/2) * (nusa/num)**(-p/2)
+    # elif nuac <= nusa and nuc <= nusa and nusa <= num: # spectrum 4
+    #     return Fnumax_nossa * (nusa/nuc)**(-1/2)
+    # elif nuac <= nusa <= nuc <= num: # spectrum 5 first case
+    #     return Fnumax_nossa
+    # else:
+    #     raise Exception("nuac must be smaller than nusa")
 
 class RSjetStruct:
     """Zhang, Weng, and Zheng 2024 (ZWZ24) which assumes slow cooling in the 
@@ -20,7 +51,7 @@ class RSjetStruct:
     """
     
     def __init__(self, tobs, nu, tcross, Fnumaxrs_tcross, numrs_tcross, nucutrs_tcross, nuars_tcross, keps, kGamma,\
-                 p = 2.5, k = 0, g = None, tjet = np.inf):
+                 k, p, g = None, tjet = np.inf):
         """Constructor
         
         Parameters
@@ -137,7 +168,7 @@ class RSjetStruct:
         self._nucutrs = self.nucutrs()
         self._nuars = self.nuars()
     
-    def spectrum(self):
+    def spectrum(self, diagnostic=False):
         """TODO
         
         Returns
@@ -148,18 +179,21 @@ class RSjetStruct:
         Fnu : float
             TODO
         """
-        return RSjetStruct._spectrum(self._tobs, self._nu, self._tcross, self._Fnumaxrs, self._numrs, self._nucutrs, self._nuars, self._p, self._k)
+        return RSjetStruct._spectrum(self._tobs, self._nu, self._tcross, self._Fnumaxrs, self._numrs, self._nucutrs, self._nuars, self._p, self._k, diagnostic=diagnostic)
     
     @np.vectorize # TODO figure out a way to do without np.vectorize here to take advantage of spectrum.py's vectorization
-    def _spectrum(_tobs, _nu, _tcross, _Fnumaxrs, _numrs, _nucutrs, _nuars, _p, _k):
+    def _spectrum(_tobs, _nu, _tcross, _Fnumaxrs, _numrs, _nucutrs, _nuars, _p, _k, diagnostic = False):
         """"""
-        _Fnutruemaxrs = obsFluxMax(_Fnumaxrs, smallNum, _nuars, _numrs, _nucutrs, p = _p, k = _k)
+        _Fnutruemaxrs = obsFluxMax(_Fnumaxrs, smallNum, _nuars, _numrs, _nucutrs, p = _p)
         
         spec = Spectrum(_nu, _Fnutruemaxrs, smallNum, _nuars, _numrs, _nucutrs, p = _p, k = _k)
         
         nu, Fnu = spec.spectrum()
 
-        return nu, np.where(nu < _nucutrs, Fnu,\
+        if (diagnostic):
+            return _nuars, _numrs, _nucutrs, _Fnutruemaxrs
+        else: 
+            return nu, np.where(nu < _nucutrs, Fnu,\
                                            Fnu * np.exp(-(_nu/_nucutrs - 1))**(_tobs > _tcross))
         
     @np.vectorize
@@ -484,11 +518,11 @@ class RSjetStruct:
         return self._casesabc(self._nuars_tcross, ISMscale_caseIa, ISMscale_caseIb, ISMscale_caseIc, ISMscale_caseIIa, ISMscale_caseIIb, ISMscale_caseIIc,\
                               windScale_caseIa, windScale_caseIb, windScale_caseIc, windScale_caseIIa, windScale_caseIIb, windScale_caseIIc)
     
-    def Fnumaxrsobs(self):
-        """Computes the observed maximum Flux of the reverse shock (applying 
-        synchrotron self absorption).
-        """
-        return obsFluxMax(self.Fnumaxrs(), 0, self._nuars, self._numrs, self._nucutrs)
+    #def Fnumaxrsobs(self):
+    #    """Computes the observed maximum Flux of the reverse shock (applying 
+    #    synchrotron self absorption).
+    #    """
+    #    return obsFluxMax(self.Fnumaxrs(), 0, self._nuars, self._numrs, self._nucutrs, self._p)
       
     def _buildGamma3alphaDict(self):
         """
@@ -639,7 +673,7 @@ class RSjetStruct:
             return np.nan
         else:
             try:
-                t = (nub2_tcross/nub1_tcross * tAtoB**(alpha1b - alpha1a))**(1/(alpha1b - alpha2)) * tcross; # FIXME finding incorrect crossing time for precross case a num=nucut
+                t = (nub2_tcross/nub1_tcross * tAtoB**(alpha1b - alpha1a) * tcross**(alpha1a - alpha2))**(1/(alpha1b - alpha2)) # FIXME finding incorrect crossing time for precross case a num=nucut
             except (OverflowError, ZeroDivisionError):
                 t = np.inf
             

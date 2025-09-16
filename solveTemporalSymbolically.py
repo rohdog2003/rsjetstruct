@@ -5,7 +5,7 @@ Created on Thu Jul  3 08:12:29 2025
 @author: rohdo
 """
 
-from rsjetstruct import RSjetStruct
+from .rsjetstruct import RSjetStruct
 import sympy
 import warnings
 
