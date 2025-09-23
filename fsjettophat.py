@@ -5,8 +5,8 @@ Created on Wed Jun 25 13:14:15 2025
 @author: rohdo
 """
 import numpy as np
-from spectrum import Spectrum
-from cosmoCalc import lumDistLCDM
+from .gsspectshapes import Spectrum
+from .cosmoCalc import lumDistLCDM
 import warnings
 
 class FSjetTopHat:

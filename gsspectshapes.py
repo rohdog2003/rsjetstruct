@@ -5,7 +5,6 @@ Created on Thu May 29 12:47:35 2025
 @author: rohdo
 """
 
-import scipy
 import numpy as np
 
 class Spectrum:
@@ -73,7 +72,7 @@ class Spectrum:
         elif self._nuac <= self._nusa <= self._nuc <= self._num: # spectrum 5
             if self._Fnu7 is None:
                 #Fnu7 = self._Fnumax/self._spectrum5(self._nuc, 1)
-                Fnu7 = self._Fnumax * (self._nusa/self.nuc)**self._getSlope(11)[0] * (self._nuac/self._nusa)**self._getSlope(10)[0]
+                Fnu7 = self._Fnumax * (self._nusa/self._nuc)**self._getSlope(11)[0] * (self._nuac/self._nusa)**self._getSlope(10)[0]
             else:
                 Fnu7 = self._Fnu7
             

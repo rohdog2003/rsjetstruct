@@ -7,7 +7,7 @@ Created on Tue Jun 24 12:43:23 2025
 
 import numpy as np
 import matplotlib.pyplot as plt
-from spectrum import Spectrum
+from rsjetstruct.gsspectshapes import Spectrum
 from obsfluxmax import smallNum
 from obsfluxmax import obsFluxMax
 

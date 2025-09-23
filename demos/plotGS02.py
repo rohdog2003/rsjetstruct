@@ -5,9 +5,8 @@ Created on Fri May 30 09:31:03 2025
 @author: rohdo
 """
 
-import scipy
 import numpy as np
-from spectrum import Spectrum
+from rsjetstruct.gsspectshapes import Spectrum
 import matplotlib.pyplot as plt
 
 dpi = 500
