@@ -194,7 +194,7 @@ class RSjetStruct:
             return _nuars, _numrs, _nucutrs, _Fnutruemaxrs
         else: 
             return nu, np.where(nu < _nucutrs, Fnu,\
-                                           Fnu * np.exp(-(_nu/_nucutrs - 1))**(_tobs > _tcross))
+                                               Fnu * np.exp(-_nu/_nucutrs)**(_tobs > _tcross))
         
     @np.vectorize
     def _ISM(k):
