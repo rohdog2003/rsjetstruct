@@ -106,28 +106,29 @@ class Spectrum:
     def _spectrum1(self, nu, Fnu1):
         """GS02 (5).
         """
+        
         return Spectrum._Fnub(nu, self._nub(1), Fnu1, *self._getSlope(1)) *\
                Spectrum._tildeFnub(nu, self._nub(2), *self._getSlope(2)) *\
-               (not(self._cutoff) * Spectrum._tildeFnub(nu, self._nub(3), *self._getSlope(3)) + self._cutoff * np.exp(-nu/self._nub(3)))
+               (np.logical_not(self._cutoff) * Spectrum._tildeFnub(nu, self._nub(3), *self._getSlope(3)) + self._cutoff * np.exp(-nu/self._nub(3)))
         
     def _spectrum2(self, nu, Fnu4):
         """GS02 (6).
         """
         return Spectrum._Fnu4(nu, self._nub(4), Fnu4, *self._getSlope(4)) *\
                Spectrum._tildeFnub(nu, self._nub(5), *self._getSlope(5)) *\
-               (not(self._cutoff) * Spectrum._tildeFnub(nu, self._nub(3), *self._getSlope(3)) + self._cutoff * np.exp(-nu/self._nub(3)))
+               (np.logical_not(self._cutoff) * Spectrum._tildeFnub(nu, self._nub(3), *self._getSlope(3)) + self._cutoff * np.exp(-nu/self._nub(3)))
         
     def _spectrum3(self, nu, Fnu4):
         """GS02 (7).
         """
         return Spectrum._Fnu4(nu, self._nub(4), Fnu4, *self._getSlope(4)) *\
-               (not(self._cutoff) * Spectrum._tildeFnub(nu, self._nub(6), *self._getSlope(6)) + self._cutoff * np.exp(-nu/self.nub(3)))
+               (np.logical_not(self._cutoff) * Spectrum._tildeFnub(nu, self._nub(6), *self._getSlope(6)) + self._cutoff * np.exp(-nu/self._nub(3)))
         
     def _spectrum4(self, nu, Fnu7):
         """GS02 (8).
         """
         return Spectrum._Fnub(nu, self._nub(7), Fnu7, *self._getSlope(7)) *\
-               (not(self._cutoff) * Spectrum._tildeFnub(nu, self._nub(8), *self._getSlope(8)) *\
+               (np.logical_not(self._cutoff) * Spectrum._tildeFnub(nu, self._nub(8), *self._getSlope(8)) *\
                Spectrum._tildeFnub(nu, self._nub(9), *self._getSlope(9)) +\
                self._cutoff * np.exp(-nu/self._nub(11)))
         
@@ -136,7 +137,7 @@ class Spectrum:
         """
         return Spectrum._Fnub(nu, self._nub(7), Fnu7, *self._getSlope(7)) *\
                Spectrum._tildeFnub(nu, self._nub(10), *self._getSlope(10)) *\
-               (not(self._cutoff) * Spectrum._tildeFnub(nu, self._nub(11), *self._getSlope(11)) *\
+               (np.logical_not(self._cutoff) * Spectrum._tildeFnub(nu, self._nub(11), *self._getSlope(11)) *\
                Spectrum._tildeFnub(nu, self._nub(9), *self._getSlope(9)) + self._cutoff * np.exp(-nu/self._nub(11)))
     
     def _nub(self, b):
