@@ -186,15 +186,14 @@ class RSjetStruct:
         """"""
         _Fnutruemaxrs = obsFluxMax(_Fnumaxrs, smallNum, _nuars, _numrs, _nucutrs, p = _p)
         
-        spec = Spectrum(_nu, _Fnutruemaxrs, smallNum, _nuars, _numrs, _nucutrs, p = _p, k = _k)
+        spec = Spectrum(_nu, _Fnutruemaxrs, smallNum, _nuars, _numrs, _nucutrs, p = _p, k = _k, cutoff = _tobs > _tcross)
         
         nu, Fnu = spec.spectrum()
 
         if (diagnostic):
             return _nuars, _numrs, _nucutrs, _Fnutruemaxrs
         else: 
-            return nu, np.where(nu < _nucutrs, Fnu,\
-                                               Fnu * np.exp(-_nu/_nucutrs)**(_tobs > _tcross))
+            return Fnu
         
     @np.vectorize
     def _ISM(k):
