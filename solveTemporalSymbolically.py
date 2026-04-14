@@ -17,7 +17,7 @@ g = sympy.Symbol("g")
 
 def symbolicAlphDict():
     """"""
-    rsjetstruct = RSjetStruct(1, 1, 1, 1, 2, 3, 1, 0, 0)
+    rsjetstruct = RSjetStruct(1, 1, 1, 1, 2, 3, 1, 0, 0, 0, 2)
     
     rsjetstruct._a = a
     rsjetstruct._A = A
