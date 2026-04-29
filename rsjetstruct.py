@@ -641,21 +641,41 @@ class RSjetStruct:
         """
         precross = not(postcross)
         
-        if alpha1 == alpha2:
-            return np.nan
+        if (alpha1 - alpha2) < 0.05: #if alpha1 == alpha2:
+            return 1000000 #np.nan
         else:
             try:
                 t = (nub2_tcross/nub1_tcross)**(1/(alpha1 - alpha2)) * tcross
             except (OverflowError, ZeroDivisionError):
-                t = np.nan # FIXME changed from np.inf to np.nan
+                t = 1000000 #np.nan #t = np.inf
             
             if postcross and t > tcross:
                 return t
             elif precross and t < tcross:
                 return t
             else:
-                return np.nan
+                return 1000000 #np.nan
+        
+# =============================================================================
+#         precross = not(postcross)
+#         
+#         if alpha1 == alpha2:
+#             return np.nan
+#         else:
+#             try:
+#                 t = (nub2_tcross/nub1_tcross)**(1/(alpha1 - alpha2)) * tcross
+#             except (OverflowError, ZeroDivisionError):
+#                 t = np.nan # FIXME changed from np.inf to np.nan
+#             
+#             if postcross and t > tcross:
+#                 return t
+#             elif precross and t < tcross:
+#                 return t
+#             else:
+#                 return np.nan
+# =============================================================================
     
+
     @np.vectorize
     def _tnub1eqnub2double(tcross, nub1_tcross, nub2_tcross, alpha1a, tAtoB, alpha1b, alpha2, postcross = True):
         """calculates the time at which two frequencies cross before or after 
@@ -665,23 +685,47 @@ class RSjetStruct:
         
         if postcross and tAtoB < tcross:
             raise Exception("change in powerlaw should be after crossing time for postcross = True")
-        elif precross and tAtoB > tcross:
+        elif precross and tAtoB > tcross and tAtoB < 1000000:
             raise Exception("change in powerlaw should be before crossing time for postcross = False")
         
-        if alpha1b == alpha2 or np.isnan(tAtoB):
-            return np.nan
+        if (alpha1b - alpha2) < 0.05 or np.isnan(tAtoB) or tAtoB == 1000000: #if alpha1b == alpha2 or np.isnan(tAtoB):
+            return 1000000 #np.nan
         else:
             try:
                 t = (nub2_tcross/nub1_tcross * tAtoB**(alpha1b - alpha1a) * tcross**(alpha1a - alpha2))**(1/(alpha1b - alpha2)) # FIXME finding incorrect crossing time for precross case a num=nucut
             except (OverflowError, ZeroDivisionError):
-                t = np.nan # FIXME changed from np.inf to np.nan
+                t = 1000000 #t = np.nan  #t = np.inf
             
             if postcross and t > tAtoB:
                 return t
             elif precross and t < tAtoB:
                 return t
             else:
-                return np.nan
+                return 1000000 #np.nan
+        #
+# =============================================================================
+#         precross = not(postcross)
+#         
+#         if postcross and tAtoB < tcross:
+#             raise Exception("change in powerlaw should be after crossing time for postcross = True")
+#         elif precross and tAtoB > tcross:
+#             raise Exception("change in powerlaw should be before crossing time for postcross = False")
+#         
+#         if alpha1b == alpha2 or np.isnan(tAtoB):
+#             return np.nan
+#         else:
+#             try:
+#                 t = (nub2_tcross/nub1_tcross * tAtoB**(alpha1b - alpha1a) * tcross**(alpha1a - alpha2))**(1/(alpha1b - alpha2)) # FIXME finding incorrect crossing time for precross case a num=nucut
+#             except (OverflowError, ZeroDivisionError):
+#                 t = np.nan # FIXME changed from np.inf to np.nan
+#             
+#             if postcross and t > tAtoB:
+#                 return t
+#             elif precross and t < tAtoB:
+#                 return t
+#             else:
+#                 return np.nan
+# =============================================================================
             
             
         
