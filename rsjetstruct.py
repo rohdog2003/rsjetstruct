@@ -50,8 +50,8 @@ class RSjetStruct:
     Note : break frequency parameters should not be equal
     """
     
-    def __init__(self, tobs, nu, tcross, Fnumaxrs_tcross, numrs_tcross, nucutrs_tcross, nuars_tcross, keps, kGamma,\
-                 k, p, g = None, tjet = np.inf):
+    def __init__(self, tobs, nu, tcross, Fnumaxrs_tcross, numrs_tcross, nucutrs_tcross, nuars_tcross, keps = 0, kGamma = 0,\
+                 k = 0, p = 2.5, g = None, tjet = np.inf):
         """Constructor
         
         Parameters
