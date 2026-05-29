@@ -12,7 +12,7 @@ class Spectrum:
     prescription in Granot and Sari 2002 (GS02).
     """
     
-    def __init__(self, nu, Fnumax, nuac, nusa, num, nuc, p = 2.5, k = 0, Fnu1 = None, Fnu4 = None, Fnu7 = None, cutoff = False):
+    def __init__(self, nu, Fnumax, nuac, nusa, num, nuc, p = 2.5, k = 0, Fnu1 = None, Fnu4 = None, Fnu7 = None, cutoff = False, specnum = None):
         """
         NOTE: Fnumax is the extrapolated peak
         NOTE: only nu can be a vector and other inputs must be scalars
@@ -29,12 +29,13 @@ class Spectrum:
         self._Fnu4 = Fnu4
         self._Fnu7 = Fnu7
         self._cutoff = cutoff
+        self._specnum = specnum
         
         self._errDict = Spectrum._buildErrDict()
     
     def spectrum(self): # FIXME something bad will probably happen if any of the frequencies are equal
         """"""
-        if self._nuac <= self._nusa <= self._num <= self._nuc: # spectrum 1
+        if (self._nuac <= self._nusa <= self._num <= self._nuc) or self._specnum == 1: # spectrum 1
             if self._Fnu1 is None:
                 # Fnu1 = self._Fnumax/self._spectrum1(self._num, 1); # TODO
                 Fnu1 = self._Fnumax * (self._nusa/self._num)**self._getSlope(2)[0]
@@ -43,7 +44,7 @@ class Spectrum:
             
             spec = self._spectrum1(self._nu, Fnu1)
             
-        elif self._nuac <= self._num <= self._nusa <= self._nuc: # spectrum 2
+        elif (self._nuac <= self._num <= self._nusa <= self._nuc) or self._specnum == 2: # spectrum 2
             if self._Fnu4 is None:
                 #Fnu4 = self._Fnumax/self._spectrum2(self._nusa, 1)
                 Fnu4 = self._Fnumax * (self._num/self._nusa)**self._getSlope(5)[0]
@@ -52,7 +53,7 @@ class Spectrum:
             
             spec = self._spectrum2(self._nu, Fnu4)
             
-        elif self._nuac <= self._nusa and self._num <= self._nusa and self._nuc <= self._nusa: # spectrum 3
+        elif (self._nuac <= self._nusa and self._num <= self._nusa and self._nuc <= self._nusa) or self._specnum == 3: # spectrum 3
             if self._Fnu4 is None:
                 #Fnu4 = self._Fnumax/self._spectrum3(self._nusa, 1)
                 Fnu4 = self._Fnumax * (self._num/self._nusa)**self._getSlope(5)[0]
@@ -61,7 +62,7 @@ class Spectrum:
             
             spec = self._spectrum3(self._nu, Fnu4)
             
-        elif self._nuac <= self._nusa and self._nuc <= self._nusa and self._nusa <= self._num: # spectrum 4
+        elif (self._nuac <= self._nusa and self._nuc <= self._nusa and self._nusa <= self._num) or self._specnum == 4: # spectrum 4
             if self._Fnu7 is None:
                 #Fnu7 = self._Fnumax/self._spectrum4(self._nusa, 1)
                 Fnu7 = self._Fnumax * (self._nuac/self._nusa)**self._getSlope(8)[0]
@@ -70,7 +71,7 @@ class Spectrum:
             
             spec = self._spectrum4(self._nu, Fnu7)
             
-        elif self._nuac <= self._nusa <= self._nuc <= self._num: # spectrum 5
+        elif (self._nuac <= self._nusa <= self._nuc <= self._num) or self._specnum == 5: # spectrum 5
             if self._Fnu7 is None:
                 #Fnu7 = self._Fnumax/self._spectrum5(self._nuc, 1)
                 Fnu7 = self._Fnumax * (self._nusa/self._nuc)**self._getSlope(11)[0] * (self._nuac/self._nusa)**self._getSlope(10)[0]
