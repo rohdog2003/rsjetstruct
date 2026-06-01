@@ -104,34 +104,83 @@ class Spectrum:
         """
         return (1 + (nu/nub)**(s * (beta1 - beta2)))**(-1/s)
     
+    def _tildeFnuCUT12(self, nu):
+        """Cutoff for spectra 1 and 2"""
+        tildeFnu3 = Spectrum._tildeFnub(nu, self._nub(3), *self._getSlope(3))
+        tildeFnu3atnu3 = Spectrum._tildeFnub(self._nub(3), self._nub(3), *self._getSlope(3))
+        
+        s = self._getSlope(12)[2]
+        
+        return (tildeFnu3**(-s) + tildeFnu3atnu3**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nub(3)))))**(-s)
+    
+    def _FnuCUT3(self, nu, Fnu4):
+        """Cutoff for spectra 3"""
+        precut = Spectrum._Fnu4(nu, self._nub(4), Fnu4, *self._getSlope(4)) * Spectrum._tildeFnub(nu, self._nub(6), *self._getSlope(6))
+        precutatnu3or11 = Spectrum._Fnu4(self._nuc, self._nub(4), Fnu4, *self._getSlope(4)) * Spectrum._tildeFnub(nu, self._nub(6), *self._getSlope(6))
+        
+        s = self._getSlope(13)[2]
+        
+        return (precut**(-s) + precutatnu3or11**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nuc))))**(-s)
+    
+    def _FnuCUT4(self, nu, Fnu7):
+        """Cutoff for spectra 4"""
+        precut = Spectrum._Fnub(nu, self._nub(7), Fnu7, *self._getSlope(7)) *\
+                 Spectrum._tildeFnub(nu, self._nub(8), *self._getSlope(8)) *\
+                 Spectrum._tildeFnub(nu, self._nub(9), *self._getSlope(9))
+        precutatnu11 = Spectrum._Fnub(self._nub(11), self._nub(7), Fnu7, *self._getSlope(7)) *\
+                       Spectrum._tildeFnub(self._nub(11), self._nub(8), *self._getSlope(8)) *\
+                       Spectrum._tildeFnub(self._nub(11), self._nub(9), *self._getSlope(9))
+            
+        s = self._getSlope(14)[2]           
+            
+        return (precut**(-s) + precutatnu11**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nub(11)))))**(-s)
+    
+    def _tildeFnuCUT5(self, nu):
+        """Cutoff for spectra 5"""
+        tildeFnu11 = Spectrum._tildeFnub(nu, self._nub(11), *self._getSlope(11))
+        tildeFnu11atnu11 = Spectrum._tildeFnub(self._nub(11), self._nub(11), *self._getSlope(11))
+            
+        s = self._getSlope(15)[2]
+            
+        return (tildeFnu11**(-s) + tildeFnu11atnu11**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nub(11)))))**(-s)
+    
     def _spectrum1(self, nu, Fnu1):
         """GS02 (5).
         """
         
         return Spectrum._Fnub(nu, self._nub(1), Fnu1, *self._getSlope(1)) *\
                Spectrum._tildeFnub(nu, self._nub(2), *self._getSlope(2)) *\
-               (np.logical_not(self._cutoff) * Spectrum._tildeFnub(nu, self._nub(3), *self._getSlope(3)) + self._cutoff * np.exp(-nu/self._nub(3)))
+               (np.logical_not(self._cutoff) * Spectrum._tildeFnub(nu, self._nub(3), *self._getSlope(3)) + self._cutoff *  self._tildeFnuCUT12(nu))# np.exp(-nu/self._nub(3)))
         
     def _spectrum2(self, nu, Fnu4):
         """GS02 (6).
         """
         return Spectrum._Fnu4(nu, self._nub(4), Fnu4, *self._getSlope(4)) *\
                Spectrum._tildeFnub(nu, self._nub(5), *self._getSlope(5)) *\
-               (np.logical_not(self._cutoff) * Spectrum._tildeFnub(nu, self._nub(3), *self._getSlope(3)) + self._cutoff * np.exp(-nu/self._nub(3)))
+               (np.logical_not(self._cutoff) * Spectrum._tildeFnub(nu, self._nub(3), *self._getSlope(3)) + self._cutoff * self._tildeFnuCUT12(nu))# np.exp(-nu/self._nub(3)))
         
     def _spectrum3(self, nu, Fnu4):
         """GS02 (7).
         """
-        return Spectrum._Fnu4(nu, self._nub(4), Fnu4, *self._getSlope(4)) *\
-               (np.logical_not(self._cutoff) * Spectrum._tildeFnub(nu, self._nub(6), *self._getSlope(6)) + self._cutoff * np.exp(-nu/self._nub(3)))
+        #return Spectrum._Fnu4(nu, self._nub(4), Fnu4, *self._getSlope(4)) *\
+        #       (np.logical_not(self._cutoff) * Spectrum._tildeFnub(nu, self._nub(6), *self._getSlope(6)) + self._cutoff * np.exp(-nu/self._nub(3)))
+        
+        return np.logical_not(self._cutoff) * Spectrum._Fnu4(nu, self._nub(4), Fnu4, *self._getSlope(4)) *\
+               Spectrum._tildeFnub(nu, self._nub(6), *self._getSlope(6)) +\
+               self._cutoff * self._FnuCUT3(nu, Fnu4)
         
     def _spectrum4(self, nu, Fnu7):
         """GS02 (8).
         """
-        return Spectrum._Fnub(nu, self._nub(7), Fnu7, *self._getSlope(7)) *\
-               (np.logical_not(self._cutoff) * Spectrum._tildeFnub(nu, self._nub(8), *self._getSlope(8)) *\
+        #return Spectrum._Fnub(nu, self._nub(7), Fnu7, *self._getSlope(7)) *\
+        #       (np.logical_not(self._cutoff) * Spectrum._tildeFnub(nu, self._nub(8), *self._getSlope(8)) *\
+        #       Spectrum._tildeFnub(nu, self._nub(9), *self._getSlope(9)) +\
+        #       self._cutoff * np.exp(-nu/self._nub(11)))
+        
+        return np.logical_not(self._cutoff) * Spectrum._Fnub(nu, self._nub(7), Fnu7, *self._getSlope(7)) *\
+               Spectrum._tildeFnub(nu, self._nub(8), *self._getSlope(8)) *\
                Spectrum._tildeFnub(nu, self._nub(9), *self._getSlope(9)) +\
-               self._cutoff * np.exp(-nu/self._nub(11)))
+               self._cutoff * self._FnuCUT4(nu, Fnu7)
         
     def _spectrum5(self, nu, Fnu7):
         """GS02 (9).
@@ -139,7 +188,7 @@ class Spectrum:
         return Spectrum._Fnub(nu, self._nub(7), Fnu7, *self._getSlope(7)) *\
                Spectrum._tildeFnub(nu, self._nub(10), *self._getSlope(10)) *\
                (np.logical_not(self._cutoff) * Spectrum._tildeFnub(nu, self._nub(11), *self._getSlope(11)) *\
-               Spectrum._tildeFnub(nu, self._nub(9), *self._getSlope(9)) + self._cutoff * np.exp(-nu/self._nub(11)))
+               Spectrum._tildeFnub(nu, self._nub(9), *self._getSlope(9)) + self._cutoff * self._tildeFnuCUT5(nu)) # np.exp(-nu/self._nub(11)))
     
     def _nub(self, b):
         """"""
@@ -235,8 +284,29 @@ class Spectrum:
             
             s = self._s(0.597,\
                         0.597) # table 2 of GS02 excludes so taken to be same as ISM
+        
+        elif b==12: # cutoff frequency spectrum 1 and 2
+            beta1 = np.nan;          beta2 = np.nan
+            
+            s = self._s(2, 2)
+            
+        elif b==13: # cutoff frequency spectrum 3
+            beta1 = np.nan;          beta2 = np.nan
+            
+            s = self._s(2, 2)
+            
+        elif b==14: # cutoff frequency spectrum 4
+            beta1 = np.nan;          beta2 = np.nan
+            
+            s = self._s(2, 2)
+            
+        elif b==15: # cutoff frequency spectrum 5
+            beta1 = np.nan;          beta2 = np.nan
+            
+            s = self._s(2, 2)
+        
         else:
-            raise Exception("b must be an integer between 1 (inclusive) and 11 (inclusive)")
+            raise Exception("b must be an integer between 1 (inclusive) and 15 (inclusive)")
             
         return beta1, beta2, s
     
