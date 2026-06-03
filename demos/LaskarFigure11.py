@@ -4,16 +4,23 @@ Created on Mon Jun 23 11:41:57 2025
 
 @author: rohdo
 """
+#import sys
+#from pathlib import Path
+
+#root = Path(__file__).resolve().parent.parent
+#sys.path.insert(0, str(root))
+
 import scipy.optimize as sciopt
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-from rsjetstruct import RSjetStruct
-from fsjettophat import FSjetTopHat
-from multidimcurvefit import multiDimCurveFit, chi2pdof, chi2, dof, gof
-from plotTools import alpha, nFormatStr, plotErrorComparison, plotlogfan
-import lcinterpolate
-from lcinterpolate import LCinterpolate, argclosest
+import os
+from rsjetstruct.rsjetstruct import RSjetStruct
+from rsjetstruct.fsjettophat import FSjetTopHat
+from rsjetstruct.multidimcurvefit import multiDimCurveFit, chi2pdof, chi2, dof, gof
+from rsjetstruct.plotTools import alpha, nFormatStr, plotErrorComparison, plotlogfan
+import rsjetstruct.lcinterpolate
+from rsjetstruct.lcinterpolate import LCinterpolate, argclosest
 
 thr = 0.000001 # group equal elements
 nobs = 1
@@ -39,6 +46,12 @@ nupeakobs = -0.49
 nupeakobserr = 0.01
 
 cbcolors = ["#553CA5", "#006EB2", "#96B4DF", "#F0E442", "#E69F00", "#D55E00", "#750000"]
+
+base_dir = os.path.dirname(__file__)          # .../rsjetstruct/demos
+project_dir = os.path.dirname(base_dir)        # .../rsjetstruct
+
+out_dir = os.path.join(project_dir, "plots", "fits")
+os.makedirs(out_dir, exist_ok=True)
 
 def group(a,thr):
     """https://stackoverflow.com/questions/71677834/is-there-any-way-to-group-the-close-numbers-of-a-list-by-numpy"""
@@ -132,13 +145,23 @@ def plotLCfits(dpi = dpi):
         plt.title(b + ": p={:.2e}".format(goodness))
         
         plt.legend()
-        plt.savefig("plots/fits/lcFits/" + b.replace(".",","), dpi = dpi)
+        
+        base_dir = os.path.dirname(__file__)          # .../rsjetstruct/demos
+        project_dir = os.path.dirname(base_dir)        # .../rsjetstruct
+
+        out_dir = os.path.join(project_dir, "plots", "fits")
+        os.makedirs(out_dir, exist_ok=True)
+
+        out_path = os.path.join(out_dir, "lcFits/" + b.replace(".",",") + ".png")
+        
+        plt.savefig(out_path, dpi = dpi)
         plt.cla()
     
 
 def plotData(thr = thr, nobs = nobs, dpi = dpi):
     """"""
-    tobs, nu, Fnu, err_Fnu, _, _, band, _, _ = np.loadtxt("apjlacbfadt1_mrt.txt", dtype = str, skiprows = 55).T
+    file_path = os.path.join(os.path.dirname(__file__), "apjlacbfadt1_mrt.txt")
+    tobs, nu, Fnu, err_Fnu, _, _, band, _, _ = np.loadtxt(file_path, dtype=str, skiprows=55).T
 
     nu      =      nu.astype(float)     # Hz
     tobs    =    tobs.astype(float)     # days
@@ -198,8 +221,16 @@ def plotData(thr = thr, nobs = nobs, dpi = dpi):
         """"""
         return lambda t : getColor([[vmin], [vmax]], 0, t = t)
         
+    #plt.savefig("plots/fits/data", dpi = dpi)
+    
+    base_dir = os.path.dirname(__file__)          # .../rsjetstruct/demos
+    project_dir = os.path.dirname(base_dir)        # .../rsjetstruct
 
-    plt.savefig("plots/fits/data", dpi = dpi)
+    out_dir = os.path.join(project_dir, "plots", "fits")
+    os.makedirs(out_dir, exist_ok=True)
+
+    out_path = os.path.join(out_dir, "data.png")
+    plt.savefig(out_path, dpi=dpi)
     
     return tobs_grouped_new, nu_grouped, Fnu_grouped, err_Fnu_grouped, colors_grouped
 
@@ -208,6 +239,8 @@ def plotBreakFreq(fileName, tobs_grouped, tcross, Fnumaxrs_tcross, numrs_tcross,
     tobs = np.geomspace(tcross * 1e-1, np.max(tobs_grouped[-1]), 1000)
     
     rsjetstruct = RSjetStruct(tobs, 1, tcross, Fnumaxrs_tcross, numrs_tcross, nucutrs_tcross, nuars_tcross, keps, kGamma, p = p, k = k, g = g)
+    
+    print(rsjetstruct._tnuarseqnumrsPreCrossISMcaseIIIa)
     
     mPL = alpha(tobs, rsjetstruct.numrs())
     cutPL = alpha(tobs, rsjetstruct.nucutrs())
@@ -228,7 +261,15 @@ def plotBreakFreq(fileName, tobs_grouped, tcross, Fnumaxrs_tcross, numrs_tcross,
     plt.plot(tobs, rsjetstruct.Fnumaxrs(), color = "k", label = r"$F_{\nu,max}^{rs}:$" + nFormatStr(len(FPL)).format(*FPL))
     plt.legend()
     
-    plt.savefig(fileName + "_breakFreq", dpi = dpi)
+    base_dir = os.path.dirname(__file__)          # .../rsjetstruct/demos
+    project_dir = os.path.dirname(base_dir)        # .../rsjetstruct
+
+    out_dir = os.path.join(project_dir, "plots", "fits")
+    os.makedirs(out_dir, exist_ok=True)
+
+    out_path = os.path.join(out_dir, fileName + "_breakFreq.png")
+    
+    plt.savefig(out_path, dpi = dpi)
     plt.cla()
 
 def plotFit(tobs_grouped, nu_grouped, Fnu_grouped, err_FnuGrouped, colors_grouped, k = k, p = p, dpi = dpi):
@@ -262,7 +303,6 @@ def plotFit(tobs_grouped, nu_grouped, Fnu_grouped, err_FnuGrouped, colors_groupe
     p0 =          [      0.5,       1.1,        10,         12,         8,  0.1,      0,   1]
     bounds =      [lowerBounds, upperBounds]
     popt, pcov = multiDimCurveFit(fitFunc, nu_grouped, Fnu_grouped, SIGMA = err_FnuGrouped, bounds = bounds, p0 = p0)
-    print(*10**popt[:-3], *popt[-3:])
     
     plt.title(r"$\chi^2/d.o.f.$={:.2f}".format(chi2pdof(fitFunc, nu_grouped, Fnu_grouped, err_FnuGrouped, args = popt)))
     
@@ -270,18 +310,28 @@ def plotFit(tobs_grouped, nu_grouped, Fnu_grouped, err_FnuGrouped, colors_groupe
     
     for i, t in enumerate(LaskarTimes):
         modelFit = RSjetStruct(t, nu, *10**popt[:-3], popt[-3], popt[-2], k = k, p = p, g = popt[-1])
-        nu_model, Fnu_model = modelFit.spectrum()
-        plt.plot(nu_model, Fnu_model, linestyle = ":", color = getColor(tobs_grouped, 0, t = t))
+        #nu_model, 
+        Fnu_model = modelFit.spectrum()
+        plt.plot(modelFit._nu, Fnu_model, linestyle = ":", color = getColor(tobs_grouped, 0, t = t))
         modelFS = FSjetTopHat(nu, 10**-0.616, 10**-0.221, 1, 10**-3.612, 10**54.04/1e52, t, 0.151, p = p, k = k)
         nu_FS, Fnu_FS = modelFS.spectrum()
         plt.plot(nu_FS, Fnu_FS, linestyle = "--", color = getColor(tobs_grouped, 0, t = t))
-        plt.plot(nu_model, Fnu_model + Fnu_FS, color = getColor(tobs_grouped, 0, t = t), label = "{:.2f} d".format(LaskarTimes[i]))
+        plt.plot(modelFit._nu, Fnu_model + Fnu_FS, color = getColor(tobs_grouped, 0, t = t), label = "{:.2f} d".format(LaskarTimes[i]))
     
     plt.legend(loc = "upper left")
-    plt.savefig("plots/fits/fit", dpi = dpi)
+    
+    base_dir = os.path.dirname(__file__)          # .../rsjetstruct/demos
+    project_dir = os.path.dirname(base_dir)        # .../rsjetstruct
+
+    out_dir = os.path.join(project_dir, "plots", "fits")
+    os.makedirs(out_dir, exist_ok=True)
+
+    out_path = os.path.join("fit.png")
+    
+    plt.savefig(out_path, dpi = dpi)
     plt.close()
     
-    plotBreakFreq("plots/fits/fit", tobs_grouped, *10**popt[:5], popt[5], popt[6], p = p, k = k, g = popt[7])
+    plotBreakFreq("fit", tobs_grouped, *10**popt[:5], popt[5], popt[6], p = p, k = k, g = popt[7])
     
     #print("chi2:", "{:.2f}".format(chi2(fitFunc, tobs_grouped, Fnu_grouped, err_FnuGrouped, args = popt)))
     #print("d.o.f.:", "{}".format(dof(fitFunc, tobs_grouped, Fnu_grouped)))
@@ -354,22 +404,33 @@ def plotFitpRS(tobs_grouped, nu_grouped, Fnu_grouped, err_FnuGrouped, colors_gro
     
     for i, t in enumerate(LaskarTimes):
         modelFit = RSjetStruct(t, nu, t_cross_small, *10**popt[:-4], popt[-4], popt[-3], k = k, p = popt[-1], g = popt[-2])
-        nu_model, Fnu_model = modelFit.spectrum()
-        plt.plot(nu_model, Fnu_model, linestyle = ":", color = getColor(tobs_grouped, 0, t = t))
+        #nu_model, 
+        Fnu_model = modelFit.spectrum()
+        plt.plot(modelFit._nu, Fnu_model, linestyle = ":", color = getColor(tobs_grouped, 0, t = t))
         modelFS = FSjetTopHat(nu, 10**-0.616, 10**-0.221, 1, 10**-3.612, 10**54.04/1e52, t, 0.151, p = p, k = k)
         nu_FS, Fnu_FS = modelFS.spectrum()
         plt.plot(nu_FS, Fnu_FS, linestyle = "--", color = getColor(tobs_grouped, 0, t = t))
-        plt.plot(nu_model, Fnu_model + Fnu_FS, color = getColor(tobs_grouped, 0, t = t), label = "{:.2f} d".format(LaskarTimes[i]))
+        plt.plot(modelFit._nu, Fnu_model + Fnu_FS, color = getColor(tobs_grouped, 0, t = t), label = "{:.2f} d".format(LaskarTimes[i]))
     
     plt.legend(loc = "upper left")
-    plt.savefig("plots/fits/fitpRS", dpi = dpi)
-    plt.savefig("plots/fits/fitpRS.svg")
+    
+    base_dir = os.path.dirname(__file__)          # .../rsjetstruct/demos
+    project_dir = os.path.dirname(base_dir)        # .../rsjetstruct
+
+    out_dir = os.path.join(project_dir, "plots", "fits")
+    os.makedirs(out_dir, exist_ok=True)
+
+    out_path = os.path.join("fitpRS.png")
+    out_path_svg = os.path.join("fitpRS.svg")
+    
+    plt.savefig(out_path, dpi = dpi)
+    plt.savefig(out_path_svg)
     plt.close()
     
     #print("chi2:", "{:.2f}".format(chi2(fitFunc, tobs_grouped, Fnu_grouped, err_FnuGrouped, args = popt)))
     #print("d.o.f.:", "{}".format(dof(fitFunc, tobs_grouped, Fnu_grouped)))
     
-    plotBreakFreq("plots/fits/fitpRS", tobs_grouped, t_cross_small, *10**popt[:4], popt[4], popt[5], p = popt[7], k = k, g = popt[6])
+    plotBreakFreq("fitpRS", tobs_grouped, t_cross_small, *10**popt[:4], popt[4], popt[5], p = popt[7], k = k, g = popt[6])
     
     return popt
 
@@ -395,7 +456,8 @@ def plotFitpRSoneLessFree(tobs_grouped, nu_grouped, Fnu_grouped, err_FnuGrouped,
         
         for i, tobs in enumerate(tobs_mean):
             model = RSjetStruct(tobs, NU[i], tcross, Fnumaxrs_tcross, numrs_tcross, nucutrs_tcross, nuars_tcross, keps, kGamma, k = k, p = pRS, g = g)
-            nu_model, Fnu_model = model.spectrum()
+            #nu_model, 
+            Fnu_model = model.spectrum()
             
             #FnuStack = np.hstack([FnuStack, Fnu_model])
             FNU.append(Fnu_model + fsjettophat[i].spectrum()[1])
@@ -445,35 +507,37 @@ def plotFitpRSoneLessFree(tobs_grouped, nu_grouped, Fnu_grouped, err_FnuGrouped,
     
     for i, t in enumerate(LaskarTimes):
         modelFit = RSjetStruct(t, nu, t_cross_small, *10**popt[:-3], popt[-3] * kGamma, kGamma, k = k, p = popt[-1], g = popt[-2])
-        nu_model, Fnu_model = modelFit.spectrum()
+        #nu_model, 
+        Fnu_model = modelFit.spectrum()
         #plt.plot(nu_model, Fnu_model, linestyle = ":", color = getColor(tobs_grouped, 0, t = t))
         modelFS = FSjetTopHat(nu, 10**-0.616, 10**-0.221, 1, 10**-3.612, 10**54.04/1e52, t, 0.151, p = p, k = k)
         nu_FS, Fnu_FS = modelFS.spectrum()
         #plt.plot(nu_FS, Fnu_FS, linestyle = "--", color = getColor(tobs_grouped, 0, t = t))
-        plt.plot(nu_model, Fnu_model + Fnu_FS, color = getColor(tobs_grouped, 0, t = t), label = "{:.2f} d".format(LaskarTimes[i]))
+        plt.plot(modelFit._nu, Fnu_model + Fnu_FS, color = getColor(tobs_grouped, 0, t = t), label = "{:.2f} d".format(LaskarTimes[i]))
     
     plt.legend(loc = "upper left")
-    plt.savefig("plots/fits/fitpRSoneLessFreeLessDetail", dpi = dpi)
-    plt.savefig("plots/fits/fitpRSoneLessFreeLessDetail.svg")
+    plt.savefig(os.path.join(out_dir, "fitpRSoneLessFreeLessDetail.png"), dpi = dpi)
+    plt.savefig(os.path.join(out_dir, "fitpRSoneLessFreeLessDetail.svg"))
     
     for i, t in enumerate(LaskarTimes):
         modelFit = RSjetStruct(t, nu, t_cross_small, *10**popt[:-3], popt[-3] * kGamma, kGamma, k = k, p = popt[-1], g = popt[-2])
-        nu_model, Fnu_model = modelFit.spectrum()
-        plt.plot(nu_model, Fnu_model, linestyle = ":", color = getColor(tobs_grouped, 0, t = t))
+        #nu_model, 
+        Fnu_model = modelFit.spectrum()
+        plt.plot(modelFit._nu, Fnu_model, linestyle = ":", color = getColor(tobs_grouped, 0, t = t))
         modelFS = FSjetTopHat(nu, 10**-0.616, 10**-0.221, 1, 10**-3.612, 10**54.04/1e52, t, 0.151, p = p, k = k)
         nu_FS, Fnu_FS = modelFS.spectrum()
         plt.plot(nu_FS, Fnu_FS, linestyle = "--", color = getColor(tobs_grouped, 0, t = t))
         #plt.plot(nu_model, Fnu_model + Fnu_FS, color = getColor(tobs_grouped, 0, t = t), label = "{:.2f} d".format(LaskarTimes[i]))
     
     plt.legend(loc = "upper left")
-    plt.savefig("plots/fits/fitpRSoneLessFree", dpi = dpi)
-    plt.savefig("plots/fits/fitpRSoneLessFree.svg")
+    plt.savefig(os.path.join(out_dir, "fitpRSoneLessFree.png"), dpi = dpi)
+    plt.savefig(os.path.join(out_dir, "fitpRSoneLessFree.svg"))
     plt.close()
     
     #print("chi2:", "{:.2f}".format(chi2(fitFunc, tobs_grouped, Fnu_grouped, err_FnuGrouped, args = popt)))
     #print("d.o.f.:", "{}".format(dof(fitFunc, tobs_grouped, Fnu_grouped)))
     
-    plotBreakFreq("plots/fits/fitpRSoneLessFree", tobs_grouped, t_cross_small, *10**popt[:4], popt[4] * kGamma, kGamma, p = popt[-1], k = k, g = popt[-2])
+    plotBreakFreq("fitpRSoneLessFree", tobs_grouped, t_cross_small, *10**popt[:4], popt[4] * kGamma, kGamma, p = popt[-1], k = k, g = popt[-2])
     
     return popt
 
@@ -495,7 +559,8 @@ def plotTopHatFitpRS(tobs_grouped, nu_grouped, Fnu_grouped, err_FnuGrouped, colo
         
         for i, tobs in enumerate(tobs_mean):
             model = RSjetStruct(tobs, NU[i], tcross, Fnumaxrs_tcross, numrs_tcross, nucutrs_tcross, nuars_tcross, 0, 0, k = k, p = pRS, g = g)
-            nu_model, Fnu_model = model.spectrum()
+            #nu_model, 
+            Fnu_model = model.spectrum()
             
             #FnuStack = np.hstack([FnuStack, Fnu_model])
             FNU.append(Fnu_model + fsjettophat[i].spectrum()[1])
@@ -539,33 +604,48 @@ def plotTopHatFitpRS(tobs_grouped, nu_grouped, Fnu_grouped, err_FnuGrouped, colo
     
     for i, t in enumerate(LaskarTimes):
         modelFit = RSjetStruct(t, nu, t_cross_small, *10**popt[:4], 0, 0, k = k, p = popt[-1], g = popt[-2])
-        nu_model, Fnu_model = modelFit.spectrum()
+        #nu_model, 
+        Fnu_model = modelFit.spectrum()
         modelFS = FSjetTopHat(nu, 10**-0.616, 10**-0.221, 1, 10**-3.612, 10**54.04/1e52, t, 0.151, p = p, k = k)
         nu_FS, Fnu_FS = modelFS.spectrum()
-        plt.plot(nu_model, Fnu_model + Fnu_FS, color = getColor(tobs_grouped, 0, t = t), label = "{:.2f} d".format(LaskarTimes[i]))
+        plt.plot(modelFit._nu, Fnu_model + Fnu_FS, color = getColor(tobs_grouped, 0, t = t), label = "{:.2f} d".format(LaskarTimes[i]))
     
     plt.legend(loc = "upper left")
-    plt.savefig("plots/fits/topHatFitpRSlessDetail", dpi = dpi)
-    plt.savefig("plots/fits/topHatFitpRSlessDetail.svg")
+    
+    base_dir = os.path.dirname(__file__)          # .../rsjetstruct/demos
+    project_dir = os.path.dirname(base_dir)        # .../rsjetstruct
+
+    out_dir = os.path.join(project_dir, "plots", "fits")
+    os.makedirs(out_dir, exist_ok=True)
+
+    out_path = os.path.join(out_dir, "topHatFitpRSlessDetail.png")
+    out_path_svg = os.path.join(out_dir, "topHatFitpRSlessDetail.png")
+    
+    plt.savefig(out_path, dpi = dpi)
+    plt.savefig(out_path_svg)
     
     for i, t in enumerate(LaskarTimes):
         modelFit = RSjetStruct(t, nu, t_cross_small, *10**popt[:4], 0, 0, k = k, p = popt[-1], g = popt[-2])
-        nu_model, Fnu_model = modelFit.spectrum()
-        plt.plot(nu_model, Fnu_model, linestyle = ":", color = getColor(tobs_grouped, 0, t = t))
+        #nu_model, 
+        Fnu_model = modelFit.spectrum()
+        plt.plot(modelFit._nu, Fnu_model, linestyle = ":", color = getColor(tobs_grouped, 0, t = t))
         modelFS = FSjetTopHat(nu, 10**-0.616, 10**-0.221, 1, 10**-3.612, 10**54.04/1e52, t, 0.151, p = p, k = k)
         nu_FS, Fnu_FS = modelFS.spectrum()
         plt.plot(nu_FS, Fnu_FS, linestyle = "--", color = getColor(tobs_grouped, 0, t = t))
         #plt.plot(nu_model, Fnu_model + Fnu_FS, color = getColor(tobs_grouped, 0, t = t), label = "{:.2f} d".format(LaskarTimes[i]))
     
+    out_path = os.path.join(out_dir, "topHatFitpRS.png")
+    out_path_svg = os.path.join(out_dir, "topHatFitpRS.svg")
+    
     plt.legend(loc = "upper left")
-    plt.savefig("plots/fits/topHatFitpRS", dpi = dpi)
-    plt.savefig("plots/fits/topHatFitpRS.svg")
+    plt.savefig(out_path, dpi = dpi)
+    plt.savefig(out_path_svg)
     plt.close()
     
     #print("chi2:", "{:.2f}".format(chi2(fitFunc, tobs_grouped, Fnu_grouped, err_FnuGrouped, args = popt)))
     #print("d.o.f.:", "{}".format(dof(fitFunc, tobs_grouped, Fnu_grouped)))
     
-    plotBreakFreq("plots/fits/topHatFitpRS", tobs_grouped, t_cross_small, *10**popt[:4], 0, 0, p = popt[-1], k = k, g = popt[-2])
+    plotBreakFreq("topHatFitpRS", tobs_grouped, t_cross_small, *10**popt[:4], 0, 0, p = popt[-1], k = k, g = popt[-2])
     
     return popt
 
@@ -613,18 +693,19 @@ def plotFitpRSplusGG23(tobs_grouped, nu_grouped, Fnu_grouped, err_FnuGrouped, co
     
     for i, t in enumerate(LaskarTimes):
         modelFit = RSjetStruct(t, nu, *10**popt[:-4], popt[-4], popt[-3], k = k, p = popt[-1], g = popt[-2])
-        nu_model, Fnu_model = modelFit.spectrum()
-        plt.plot(nu_model, Fnu_model, linestyle = ":", color = getColor(tobs_grouped, 0, t = t))
+        #nu_model, 
+        Fnu_model = modelFit.spectrum()
+        plt.plot(modelFit._nu, Fnu_model, linestyle = ":", color = getColor(tobs_grouped, 0, t = t))
         modelFS = FSjetTopHat(nu, *FSparams, t, z, p = pFS, xie = xie, k = k)
         nu_FS, Fnu_FS = modelFS.spectrum()
         plt.plot(nu_FS, Fnu_FS, linestyle = "--", color = getColor(tobs_grouped, 0, t = t))
-        plt.plot(nu_model, Fnu_model + Fnu_FS, color = getColor(tobs_grouped, 0, t = t), label = "{:.2f} d".format(LaskarTimes[i]))
+        plt.plot(modelFit._nu, Fnu_model + Fnu_FS, color = getColor(tobs_grouped, 0, t = t), label = "{:.2f} d".format(LaskarTimes[i]))
     
     plt.legend(loc = "upper left")
-    plt.savefig("plots/fits/fitpRSplusGG23", dpi = dpi)
+    plt.savefig(os.path.join(out_dir, "fitpRSplusGG23.png"), dpi = dpi)
     plt.close()
     
-    plotBreakFreq("plots/fits/fitpRSplusGG23", tobs_grouped, *10**popt[:5], popt[5], popt[6], p = popt[8], k = k, g = popt[7])
+    plotBreakFreq("fitpRSplusGG23", tobs_grouped, *10**popt[:5], popt[5], popt[6], p = popt[8], k = k, g = popt[7])
     
     #print("chi2:", "{:.2f}".format(chi2(fitFunc, tobs_grouped, Fnu_grouped, err_FnuGrouped, args = popt)))
     #print("d.o.f.:", "{}".format(dof(fitFunc, tobs_grouped, Fnu_grouped)))
@@ -670,21 +751,23 @@ def plotFitpRSplusFreeFS(tobs_grouped, nu_grouped, Fnu_grouped, err_FnuGrouped, 
     
     for i, t in enumerate(LaskarTimes):
         modelFit = RSjetStruct(t, nu, *10**popt[:5], popt[5], popt[6], k = k, p = popt[8], g = popt[7]) # TODO
-        nu_model, Fnu_model = modelFit.spectrum()
-        plt.plot(nu_model, Fnu_model, linestyle = ":", color = getColor(tobs_grouped, 0, t = t))
+        #nu_model, 
+        Fnu_model = modelFit.spectrum()
+        plt.plot(modelFit._nu, Fnu_model, linestyle = ":", color = getColor(tobs_grouped, 0, t = t))
         modelFS = FSjetTopHat(nu, 10**popt[9], 10**popt[10], 1, 10**popt[11], 10**popt[12], t, 0.151, p = popt[13], k = k) # TODO
         nu_FS, Fnu_FS = modelFS.spectrum()
         plt.plot(nu_FS, Fnu_FS, linestyle = "--", color = getColor(tobs_grouped, 0, t = t))
-        plt.plot(nu_model, Fnu_model + Fnu_FS, color = getColor(tobs_grouped, 0, t = t), label = "{:.2f} d".format(LaskarTimes[i]))
+        plt.plot(modelFit._nu, Fnu_model + Fnu_FS, color = getColor(tobs_grouped, 0, t = t), label = "{:.2f} d".format(LaskarTimes[i]))
     
     plt.legend(loc = "upper left")
-    plt.savefig("plots/fits/fitpRSplusFreeFS", dpi = dpi)
+    
+    plt.savefig(os.path.join(out_dir, "fitpRSplusFreeFS.png"), dpi = dpi)
     plt.close()
     
     #print("chi2:", "{:.2f}".format(chi2(fitFunc, tobs_grouped, Fnu_grouped, err_FnuGrouped, args = popt)))
     #print("d.o.f.:", "{}".format(dof(fitFunc, tobs_grouped, Fnu_grouped)))
     
-    plotBreakFreq("plots/fits/fitpRSplusFreeFS", tobs_grouped, *10**popt[:5], popt[5], popt[6], p = popt[8], k = k, g = popt[7])
+    plotBreakFreq("fitpRSplusFreeFS", tobs_grouped, *10**popt[:5], popt[5], popt[6], p = popt[8], k = k, g = popt[7])
     
     return popt
 
@@ -746,7 +829,8 @@ def plotLaskarFit(tobs_grouped, nu_grouped, Fnu_grouped, err_FnuGrouped, colors_
     
     for i, t in enumerate(LaskarTimes):
         modelFit = RSjetStruct(t, nu, t_cross_small, *10**popt[:-1], 0, 0, k = k, p = pRS, g = popt[-1])
-        nu_model, Fnu_model = modelFit.spectrum()
+        #nu_model, 
+        Fnu_model = modelFit.spectrum()
         #Fnu_model/np.sqrt(2) # TODO
         
         print("t   : {}".format(t))
@@ -754,19 +838,20 @@ def plotLaskarFit(tobs_grouped, nu_grouped, Fnu_grouped, err_FnuGrouped, colors_
         print("num : {:.2e}".format(modelFit.numrs()))
         print("nua : {:.2e}".format(modelFit.nuars()))
         
-        plt.plot(nu_model, Fnu_model, linestyle = ":", color = getColor(tobs_grouped, 0, t = t))
+        plt.plot(modelFit._nu, Fnu_model, linestyle = ":", color = getColor(tobs_grouped, 0, t = t))
         modelFS = FSjetTopHat(nu, 10**-0.616, 10**-0.221, 1, 10**-3.612, 10**54.04/1e52, t, 0.151, p = p, k = k)
         nu_FS, Fnu_FS = modelFS.spectrum()
         plt.plot(nu_FS, Fnu_FS, linestyle = "--", color = getColor(tobs_grouped, 0, t = t))
-        plt.plot(nu_model, Fnu_model + Fnu_FS, color = getColor(tobs_grouped, 0, t = t), label = "{:.2f} d".format(LaskarTimes[i]))
+        plt.plot(modelFit._nu, Fnu_model + Fnu_FS, color = getColor(tobs_grouped, 0, t = t), label = "{:.2f} d".format(LaskarTimes[i]))
     
     #print("chi2:", "{:.2f}".format(chi2(fitFunc, tobs_grouped, Fnu_grouped, err_FnuGrouped, args = popt)))
     #print("d.o.f.:", "{}".format(dof(fitFunc, tobs_grouped, Fnu_grouped)))
     plt.legend(loc = "upper left")
-    plt.savefig("plots/fits/laskarFit", dpi = dpi)
+    
+    plt.savefig(os.path.join(out_dir, "laskarFit.png"), dpi = dpi)
     plt.close()
     
-    plotBreakFreq("plots/fits/laskarFit", tobs_grouped, t_cross_small, *10**popt[:-1], 0, 0, p = pRS, k = k, g = popt[-1])
+    plotBreakFreq("laskarFit", tobs_grouped, t_cross_small, *10**popt[:-1], 0, 0, p = pRS, k = k, g = popt[-1])
     
 def plotZWZguess(tobs_grouped, nu_grouped, Fnu_grouped, err_FnuGrouped, colors_grouped, dpi = dpi):
     """"""
@@ -807,18 +892,19 @@ def plotZWZguess(tobs_grouped, nu_grouped, Fnu_grouped, err_FnuGrouped, colors_g
     
     for i, t in enumerate(LaskarTimes):
         modelFit = RSjetStruct(t, nu, *10**popt[:-1], 0.4, 2, k = k, p = popt[-1])
-        nu_model, Fnu_model = modelFit.spectrum()
-        plt.plot(nu_model, Fnu_model, linestyle = ":", color = getColor(tobs_grouped, 0, t = t))
+        #nu_model, 
+        Fnu_model = modelFit.spectrum()
+        plt.plot(modelFit._nu, Fnu_model, linestyle = ":", color = getColor(tobs_grouped, 0, t = t))
         modelFS = FSjetTopHat(nu, 10**-0.616, 10**-0.221, 1, 10**-3.612, 10**54.04/1e52, t, 0.151, p = p, k = k)
         nu_FS, Fnu_FS = modelFS.spectrum()
         plt.plot(nu_FS, Fnu_FS, linestyle = "--", color = getColor(tobs_grouped, 0, t = t))
-        plt.plot(nu_model, Fnu_model + Fnu_FS, color = getColor(tobs_grouped, 0, t = t), label = "{:.2f} d".format(LaskarTimes[i]))
+        plt.plot(modelFit._nu, Fnu_model + Fnu_FS, color = getColor(tobs_grouped, 0, t = t), label = "{:.2f} d".format(LaskarTimes[i]))
     
     plt.legend(loc = "upper left")
-    plt.savefig("plots/fits/ZWZ24guess", dpi = dpi)
+    plt.savefig(os.path.join(out_dir, "ZWZ24guess.png"), dpi = dpi)
     plt.close()
     
-    plotBreakFreq("plots/fits/ZWZ24guess", tobs_grouped, *10**popt[:5], 0.4, 2, p = popt[5], k = k, g = 1)
+    plotBreakFreq("ZWZ24guess", tobs_grouped, *10**popt[:5], 0.4, 2, p = popt[5], k = k, g = 1)
 
 def plotFanDiagriam(dpi = dpi):
     """Data taken from Laskar et al. 2023 table 7
@@ -829,11 +915,11 @@ def plotFanDiagriam(dpi = dpi):
     nupeak    = [1.67, 1.12,  1.19,  0.77,  0.56,  0.57,  0.45]
     nupeakerr = [0.02, 0.30,  0.25,  0.06,  0.03,  0.12,  0.07]
     
-    Fpopt, Fpcov = sciopt.curve_fit(lcinterpolate.pl, t, Fpeak, sigma = Fpeakerr, p0 = [1, -1])
+    Fpopt, Fpcov = sciopt.curve_fit(rsjetstruct.lcinterpolate.pl, t, Fpeak, sigma = Fpeakerr, p0 = [1, -1])
     _, dlnFpeakdlnt = Fpopt
     _, dlnFpeakdlnterr = np.sqrt(np.diag(Fpcov))
 
-    nupopt, nupcov = sciopt.curve_fit(lcinterpolate.pl, t, nupeak, sigma = nupeakerr, p0 = [1, -1])
+    nupopt, nupcov = sciopt.curve_fit(rsjetstruct.lcinterpolate.pl, t, nupeak, sigma = nupeakerr, p0 = [1, -1])
     _, dlnnudlnt = nupopt
     _, dlnnudlnterr = np.sqrt(np.diag(nupcov))
     
@@ -860,13 +946,13 @@ def plotFanDiagriam(dpi = dpi):
     
     plotline, _, _ = plt.errorbar(t, Fpeak, yerr = Fpeakerr, fmt = "o", color = cbcolors[-1], label = r"obs $F_{peak}$")
     plotline.set_markerfacecolor("none")
-    plt.plot(tcont, lcinterpolate.pl(tcont, *Fpopt), linestyle = ":", color = cbcolors[-1])
+    plt.plot(tcont, rsjetstruct.lcinterpolate.pl(tcont, *Fpopt), linestyle = ":", color = cbcolors[-1])
     
-    xmax_Fobs, ymax_Fobs = plotlogfan(tmin, lcinterpolate.pl(tmin, *Fpopt), dlnFpeakdlnt, dlnFpeakdlnterr, R, color = cbcolors[-1], r = r, label = "observed", zorder = 1)
-    xmax_Fstr, ymax_Fstr = plotlogfan(tmin, lcinterpolate.pl(tmin, *Fpopt), -0.75, 6.97e-2, R/1.35, color = cbcolors[-2], r = r, label = "structured", zorder = 2)
-    xmax_Ftop, ymax_Ftop = plotlogfan(tmin, lcinterpolate.pl(tmin, *Fpopt), -1.02, 4.81e-2, R/2, color = cbcolors[-3], r = r, label = "top hat", zorder = 3)
+    xmax_Fobs, ymax_Fobs = plotlogfan(tmin, rsjetstruct.lcinterpolate.pl(tmin, *Fpopt), dlnFpeakdlnt, dlnFpeakdlnterr, R, color = cbcolors[-1], r = r, label = "observed", zorder = 1)
+    xmax_Fstr, ymax_Fstr = plotlogfan(tmin, rsjetstruct.lcinterpolate.pl(tmin, *Fpopt), -0.75, 6.97e-2, R/1.35, color = cbcolors[-2], r = r, label = "structured", zorder = 2)
+    xmax_Ftop, ymax_Ftop = plotlogfan(tmin, rsjetstruct.lcinterpolate.pl(tmin, *Fpopt), -1.02, 4.81e-2, R/2, color = cbcolors[-3], r = r, label = "top hat", zorder = 3)
     
-    Fannote1 = lcinterpolate.pl(tannote1, *Fpopt)
+    Fannote1 = rsjetstruct.lcinterpolate.pl(tannote1, *Fpopt)
     plt.annotate("Observed Peak\nFlux [mJy]", (tannote1, Fannote1), arrowprops = arrowprops, xytext = (2 * tannote1, 3 * Fannote1))
     #xytext_Fobs = (tannote4, 0.22 * ymax_Fobs); plt.annotate(        "Observed", (xmax_Fobs, ymax_Fobs), arrowprops = arrowprops, xytext = xytext_Fobs)
     xytext_Fstr = (tannote3, 0.3 * ymax_Fstr); plt.annotate("Structured\nModel", (xmax_Fstr, ymax_Fstr), arrowprops = arrowprops, xytext = xytext_Fstr)
@@ -874,13 +960,13 @@ def plotFanDiagriam(dpi = dpi):
     
     plotline, _, _ = plt.errorbar(t, nupeak, yerr = nupeakerr, fmt = "d", color = cbcolors[-1], label = r"obs $\nu_{peak}$")
     plotline.set_markerfacecolor("none")
-    plt.plot(tcont, lcinterpolate.pl(tcont, *nupopt), linestyle = ":", color = cbcolors[-1])
+    plt.plot(tcont, rsjetstruct.lcinterpolate.pl(tcont, *nupopt), linestyle = ":", color = cbcolors[-1])
     
-    xmax_nuobs, ymax_nuobs = plotlogfan(tmin, lcinterpolate.pl(tmin, *nupopt), dlnnudlnt, dlnnudlnterr, R, color = cbcolors[-1], r = r, zorder = 1)
-    xmax_nustr, ymax_nustr = plotlogfan(tmin, lcinterpolate.pl(tmin, *nupopt), -1, 0, R/1.35, color = cbcolors[-2], r = r, zorder = 2)
-    xmax_nutop, ymax_nutop = plotlogfan(tmin, lcinterpolate.pl(tmin, *nupopt), -1.66, 1.22e-1, R/2, color = cbcolors[-3], r = r, zorder = 3)
+    xmax_nuobs, ymax_nuobs = plotlogfan(tmin, rsjetstruct.lcinterpolate.pl(tmin, *nupopt), dlnnudlnt, dlnnudlnterr, R, color = cbcolors[-1], r = r, zorder = 1)
+    xmax_nustr, ymax_nustr = plotlogfan(tmin, rsjetstruct.lcinterpolate.pl(tmin, *nupopt), -1, 0, R/1.35, color = cbcolors[-2], r = r, zorder = 2)
+    xmax_nutop, ymax_nutop = plotlogfan(tmin, rsjetstruct.lcinterpolate.pl(tmin, *nupopt), -1.66, 1.22e-1, R/2, color = cbcolors[-3], r = r, zorder = 3)
     
-    nuannote1 = lcinterpolate.pl(tannote1, *nupopt)
+    nuannote1 = rsjetstruct.lcinterpolate.pl(tannote1, *nupopt)
     plt.annotate("Observed Peak\nFrequency [GHz]", (tannote1, nuannote1), arrowprops = arrowprops, xytext = (0.6 * tannote1, 0.3 * nuannote1))
     #plt.annotate(         "Observed", (xmax_nuobs, ymax_nuobs), arrowprops = arrowprops, xytext = xytext_Fobs)
     plt.annotate("Structured\nModel", (xmax_nustr, ymax_nustr), arrowprops = arrowprops, xytext = xytext_Fstr)
@@ -893,9 +979,9 @@ def plotFanDiagriam(dpi = dpi):
     #order = [3, 4, 0, 1, 2]
     
     #plt.legend([handles[idx] for idx in order],[labels[idx] for idx in order])
-    
-    plt.savefig("plots/fits/FeatureComparison",  dpi = dpi)
-    plt.savefig("plots/fits/FeatureComparison.svg")
+    os.path.join(out_dir, "FeatureComparison.png")
+    plt.savefig(os.path.join(out_dir, "FeatureComparison.png"),  dpi = dpi)
+    plt.savefig(os.path.join(out_dir, "FeatureComparison.svg"))
     
 #plotLCfits()
 # plotErrorComparison("Peak Flux\nComparison", r"$d\ln F_{peak}/d\ln t$",\

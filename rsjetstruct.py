@@ -300,16 +300,16 @@ class RSjetStruct:
         else: # wind
             if (self._nuars_tcross < self._numrs_tcross < self._nucutrs_tcross):
                 # Calculate tx2
-                tx2 = self.tnuarseqnumrsPreCrossWindCaseIIIa # (self._nuars_tcross/self._numrs_tcross)**(1/(lm1-laD1))*tdec
+                tx2 = self._tnuarseqnumrsPreCrossWindCaseIIIa # (self._nuars_tcross/self._numrs_tcross)**(1/(lm1-laD1))*tdec
                 # Calculate tx1
-                tx1 = self.tnuarseqnucutrsPreCrossWindCaseIIIa # (nua2/nuc2)**(1/(lc1-laE1))*tx2
+                tx1 = self._tnuarseqnucutrsPreCrossWindCaseIIIa # (nua2/nuc2)**(1/(lc1-laE1))*tx2
                 # Calculate tx3:
                 if self._kGamma <= 1:
-                    tx3 = self.tnuarseqnumrsPostCrossWindCaseIa # (self._numrs_tcross/self._nuars_tcross)**(1/(laD2-lm2))*tdec
-                    tx4 = self.tnuarseqnucutrsPostCrossWindCaseIa # (nuc3/nua3)**(1/(laE2-lc2))*tx3
+                    tx3 = self._tnuarseqnumrsPostCrossWindCaseIa # (self._numrs_tcross/self._nuars_tcross)**(1/(laD2-lm2))*tdec
+                    tx4 = self._tnuarseqnucutrsPostCrossWindCaseIa # (nuc3/nua3)**(1/(laE2-lc2))*tx3
                 else:
-                    tx3 = self.tnuarseqnumrsPostCrossWindCaseIIa
-                    tx4 = self.tnuarseqnucutrsPostCrossWindCaseIIa # (nuc3/nua3)**(1/(laE2-lc2))*tx3
+                    tx3 = self._tnuarseqnumrsPostCrossWindCaseIIa
+                    tx4 = self._tnuarseqnucutrsPostCrossWindCaseIIa # (nuc3/nua3)**(1/(laE2-lc2))*tx3
                 # Calculate tx4
                 
                 w31 = firstweight(self._tobs,tx1,10) # 1./(1.+(self._tobs/tx1)**10)                    
@@ -336,14 +336,14 @@ class RSjetStruct:
                 
             if (self._numrs_tcross < self._nuars_tcross < self._nucutrs_tcross): # TODO
                 # Calculate tx1
-                tx1 = self.tnuarseqnucutrsPreCrossWindCaseIIIb # (self._nuars_tcross/self._nucutrs_tcross)**(1/(lc1-laE1))*self._tcross
+                tx1 = self._tnuarseqnucutrsPreCrossWindCaseIIIb # (self._nuars_tcross/self._nucutrs_tcross)**(1/(lc1-laE1))*self._tcross
                 # Calculate tx2
                 if self._kGamma <=1:
-                    tx2up = self.tnuarseqnucutrsPostCrossWindCaseIb # (self._nucutrs_tcross/self._nuars_tcross)**(1/(laE2-lc2))*self._tcross
-                    tx2down = self.tnuarseqnumrsPostCrossWindCaseIb
+                    tx2up = self._tnuarseqnucutrsPostCrossWindCaseIb # (self._nucutrs_tcross/self._nuars_tcross)**(1/(laE2-lc2))*self._tcross
+                    tx2down = self._tnuarseqnumrsPostCrossWindCaseIb
                 else:
-                    tx2up = self.tnuarseqnucutrsPostCrossWindCaseIIb
-                    tx2down = self.tnuarseqnumrsPostCrossWindCaseIIb
+                    tx2up = self._tnuarseqnucutrsPostCrossWindCaseIIb
+                    tx2down = self._tnuarseqnumrsPostCrossWindCaseIIb
                 
                 w31 = 1./(1.+(self._tobs/tx1)**pl)                    
                 w21 = 1./(1.+(self._tobs/tx1)**(-1.*pl))
@@ -369,11 +369,11 @@ class RSjetStruct:
             if (self._numrs_tcross < self._nucutrs_tcross < self._nuars_tcross): # TODO
                 # No crossings pre deceleration
                 if self._kGamma <= 1:
-                    tx3 = self.tnuarseqnumrsPostCrossWindCaseIc # (self._numrs_tcross/self._nuars_tcross)**(1/(laD2-lm2))*tdec
-                    tx4 = self.tnuarseqnucutrsPostCrossWindCaseIc # (nuc3/nua3)**(1/(laE2-lc2))*tx3
+                    tx3 = self._tnuarseqnumrsPostCrossWindCaseIc # (self._numrs_tcross/self._nuars_tcross)**(1/(laD2-lm2))*tdec
+                    tx4 = self._tnuarseqnucutrsPostCrossWindCaseIc # (nuc3/nua3)**(1/(laE2-lc2))*tx3
                 else:
-                    tx3 = self.tnuarseqnumrsPostCrossWindCaseIIc
-                    tx4 = self.tnuarseqnucutrsPostCrossWindCaseIIc # (nuc3/nua3)**(1/(laE2-lc2))*tx3
+                    tx3 = self._tnuarseqnumrsPostCrossWindCaseIIc
+                    tx4 = self._tnuarseqnucutrsPostCrossWindCaseIIc # (nuc3/nua3)**(1/(laE2-lc2))*tx3
                
                 y31 = RSjetStruct._spectrum(self._tobs, self._nu, self._tcross, self._Fnumaxrs, self._numrs, self._nucutrs, self._nuars, self._p, self._k, specnum = 3, decelerated = False) # calc_spect(3, fsparams, f, nua, num, nuc, fnumax, decelerated=False)
                 y32 = RSjetStruct._spectrum(self._tobs, self._nu, self._tcross, self._Fnumaxrs, self._numrs, self._nucutrs, self._nuars, self._p, self._k, specnum = 3, decelerated = True) # calc_spect(3, fsparams, f, nua, num, nuc, fnumax, decelerated=True)
@@ -857,14 +857,13 @@ class RSjetStruct:
         """
         precross = not(postcross)
         
-        if (alpha1 - alpha2) < 0.05: #if alpha1 == alpha2:
+        if abs(alpha1 - alpha2) < 0.05: #if alpha1 == alpha2:
             return largeTime #np.nan
         else:
             try:
-                t = (nub2_tcross/nub1_tcross)**(1/(alpha1 - alpha2)) * tcross
+                t = (nub2_tcross**(1/(alpha1 - alpha2))/nub1_tcross**(1/(alpha1 - alpha2))) * tcross # FIXME problems with overflow at early times
             except (OverflowError, ZeroDivisionError):
                 t = largeTime #np.nan #t = np.inf
-            
             if postcross and t > tcross:
                 return t
             elif precross and t < tcross:
@@ -904,11 +903,12 @@ class RSjetStruct:
         elif precross and tAtoB > tcross and tAtoB < largeTime:
             raise Exception("change in powerlaw should be before crossing time for postcross = False")
         
-        if (alpha1b - alpha2) < 0.05 or np.isnan(tAtoB) or tAtoB == largeTime: #if alpha1b == alpha2 or np.isnan(tAtoB):
+        if abs(alpha1b - alpha2) < 0.05 or np.isnan(tAtoB) or tAtoB == largeTime: #if alpha1b == alpha2 or np.isnan(tAtoB):
             return largeTime #np.nan
         else:
             try:
-                t = (nub2_tcross/nub1_tcross * tAtoB**(alpha1b - alpha1a) * tcross**(alpha1a - alpha2))**(1/(alpha1b - alpha2)) # FIXME finding incorrect crossing time for precross case a num=nucut
+                #t = (nub2_tcross/nub1_tcross * tAtoB**(alpha1b - alpha1a) * tcross**(alpha1a - alpha2))**(1/(alpha1b - alpha2)) # FIXME finding incorrect crossing time for precross case a num=nucut
+                t = (nub2_tcross/nub1_tcross)**(1/(alpha1b - alpha2)) * tAtoB**((alpha1b - alpha1a)/(alpha1b - alpha2)) * tcross**((alpha1a - alpha2)/(alpha1b - alpha2))
             except (OverflowError, ZeroDivisionError):
                 t = largeTime #t = np.nan  #t = np.inf
             

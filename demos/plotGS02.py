@@ -69,8 +69,8 @@ def plotFigure1(ISMspec, windSpec, filename, dpi = dpi):
     plt.savefig(filename, dpi = dpi)
     plt.close()
     
-plotFigure1(ISMspec1, windSpec1, "plots/spectrum1")
-plotFigure1(ISMspec2, windSpec2, "plots/spectrum2")
-plotFigure1(ISMspec3, windSpec3, "plots/spectrum3")
-plotFigure1(ISMspec4, windSpec4, "plots/spectrum4")
-plotFigure1(ISMspec5, windSpec5, "plots/spectrum5")
+plotFigure1(ISMspec1, windSpec1, "rsjetstruct/plots/spectrum1")
+plotFigure1(ISMspec2, windSpec2, "rsjetstruct/plots/spectrum2")
+plotFigure1(ISMspec3, windSpec3, "rsjetstruct/plots/spectrum3")
+plotFigure1(ISMspec4, windSpec4, "rsjetstruct/plots/spectrum4")
+plotFigure1(ISMspec5, windSpec5, "rsjetstruct/plots/spectrum5")
