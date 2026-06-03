@@ -236,7 +236,7 @@ class RSjetStruct:
                     spect = (w21*y21 + w11*y11)/(w21+w11)*(self._tobs < self._tcross) + (w12a*y12+w22a*y22)/(w12a+w22a)*(self._tobs >= self._tcross)   
                 else: # if nuars goes above both num and nucut post deceleration
                     # weighted average
-                    spect =  (w21*y21 + w11*y11)/(w21+w11)*(self._tobs < self._tcross) + (w12a*y12+(w22a + w22b)*y22+w32b*y32)/(w12a+w22a+w22b+w32b)*(self._tobs >= self._tcross)   
+                    spect =  (w21*y21 + w11*y11)/(w21+w11)*(self._tobs < self._tcross) + (w12a*y12+(w22a*w22b)*y22+w32b*y32)/(w12a+w22a*w22b+w32b)*(self._tobs >= self._tcross)   
                 
             if (self._numrs_tcross <= self._nuars_tcross <= self._nucutrs_tcross):  # spectrum 2
                 # Calculate tx1
@@ -293,7 +293,7 @@ class RSjetStruct:
                 elif tx3 is np.nan or tx3 >= largeTime: # in the case that post deceleration nua falls below nucut but not below num
                     spect = (w21*y21 + w31*y31)/(w21+w31)*(self._tobs < self._tcross) + (w32a*y32+w22a*y22)/(w32a+w22a)*(self._tobs >= self._tcross)
                 else: # in the case that post deceleration nua falls below nucut and below num
-                    spect = (w21*y21 + w31*y31)/(w21+w31)*(self._tobs < self._tcross) + (w32a*y32+(w22a+w22b)*y22+w12b*y12)/(w32a+w22a+w22b+w12b)*(self._tobs >= self._tcross)
+                    spect = (w21*y21 + w31*y31)/(w21+w31)*(self._tobs < self._tcross) + (w32a*y32+(w22a*w22b)*y22+w12b*y12)/(w32a+w22a*w22b+w12b)*(self._tobs >= self._tcross)
                 
             # TODO implement spectrum 4, 5, 6
         
@@ -332,7 +332,7 @@ class RSjetStruct:
                 elif tx4 is np.nan or tx4 >= largeTime:    
                     spect = (w31*y31 + w21*y21 + w11*y11)/(w31+w21+w11)*(self._tobs < self._tcross) + (w12a*y12 + w22a*y22)/(w12a+w22a)*(self._tobs >= self._tcross)            
                 else:
-                    spect = (w31*y31 + w21*y21 + w11*y11)/(w31+w21+w11)*(self._tobs < self._tcross) + (w12a*y12 + (w22a+w22b)*y22 + w32b*y32)/(w12a+w22a+w22b+y32)*(self._tobs >= self._tcross)
+                    spect = (w31*y31 + w21*y21 + w11*y11)/(w31+w21+w11)*(self._tobs < self._tcross) + (w12a*y12 + (w22a*w22b)*y22 + w32b*y32)/(w12a+w22a*w22b+y32)*(self._tobs >= self._tcross)
                 
             if (self._numrs_tcross < self._nuars_tcross < self._nucutrs_tcross): # TODO
                 # Calculate tx1
@@ -386,7 +386,7 @@ class RSjetStruct:
                 elif tx3 is np.nan or tx3 >= largeTime: # in the case that post deceleration nua falls below nucut but not below num
                     spect = y31*(self._tobs < self._tcross) + (w32a*y32+w22a*y22)/(w32a+w22a)*(self._tobs >= self._tcross)
                 else: # in the case that post deceleration nua falls below nucut and below num
-                    spect = y31*(self._tobs < self._tcross) + (w32a*y32+(w22a+w22b)*y22+w12b*y12)/(w32a+w22a+w22b+w12b)*(self._tobs >= self._tcross)
+                    spect = y31*(self._tobs < self._tcross) + (w32a*y32+(w22a*w22b)*y22+w12b*y12)/(w32a+w22a*w22b+w12b)*(self._tobs >= self._tcross)
                 
             # TODO implement spectrum 4, 5, 6
         
