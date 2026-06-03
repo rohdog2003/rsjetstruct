@@ -407,7 +407,7 @@ class RSjetStruct:
         nu, Fnu = spec.spectrum()
 
         if (diagnostic):
-            return _nuars, _numrs, _nucutrs, _Fnutruemaxrs
+            return _nuars, _numrs, _nucutrs, _Fnumaxrs # _Fnumaxrs was previously _Fnutruemaxrs which is incorrect since _Fnutruemaxrs includes SSA
         else: 
             return Fnu
         
