@@ -16,12 +16,12 @@ def obsFluxMax(Fnumax_nossa, nuac, nusa, num, nuc, p, specnum = None): # TODO ad
     """computes the observed maximum flux from the theoretical maximum if no
     synchrotron self absorption were to occur.
     """
-    F1 = Fnumax_nossa * ((nuac <= nusa <= num <= nuc) * (specnum is None) + specnum == 1) # spectrum 1
-    F2 = Fnumax_nossa * (nusa/num)**(-(p - 1)/2) * ((nuac <= num <= nusa <= nuc) * (specnum is None) + specnum == 2)  # spectrum 2
-    F3 = (Fnumax_nossa * (nuc/num)**(-(p - 1)/2) * (nusa/nuc)**(-p/2) * ((nuac <= nusa and num <= nusa and nuc <= nusa and num <= nuc) * (specnum is None) + specnum == 3) + \
-         Fnumax_nossa * (num/nuc)**(-1/2) * (nusa/num)**(-p/2) * ((nuac <= nusa and num <= nusa and nuc <= nusa and num > nuc) * (specnum is None) + specnum == 3))  # spectrum 3
-    F4 = Fnumax_nossa * (nusa/nuc)**(-1/2) * ((nuac <= nusa and nuc <= nusa and nusa <= num) * (specnum is None) + specnum == 4) # spectrum 4
-    F5 = Fnumax_nossa * ((nuac <= nusa <= nuc <= num) * (specnum is None) + specnum == 5) # spectrum 5
+    F1 = Fnumax_nossa * ((nuac <= nusa <= num <= nuc) * (specnum is None) + (specnum == 1)) # spectrum 1
+    F2 = Fnumax_nossa * (nusa/num)**(-(p - 1)/2) * ((nuac <= num <= nusa <= nuc) * (specnum is None) + (specnum == 2))  # spectrum 2
+    F3 = Fnumax_nossa * (nuc/num)**(-(p - 1)/2) * (nusa/nuc)**(-p/2) * ((nuac <= nusa and num <= nusa and nuc <= nusa and num <= nuc) * (specnum is None) + (specnum == 3)) + \
+         Fnumax_nossa * (num/nuc)**(-1/2) * (nusa/num)**(-p/2) * ((nuac <= nusa and num <= nusa and nuc <= nusa and num > nuc) * (specnum is None) + (specnum == 3))  # spectrum 3
+    F4 = Fnumax_nossa * (nusa/nuc)**(-1/2) * ((nuac <= nusa and nuc <= nusa and nusa <= num) * (specnum is None) + (specnum == 4)) # spectrum 4
+    F5 = Fnumax_nossa * ((nuac <= nusa <= nuc <= num) * (specnum is None) + (specnum == 5)) # spectrum 5
     if (sum(np.array([nuac > nusa])) > 0):
         warnings.warn("nuac must be smaller than nusa", RuntimeWarning)
     if (sum(np.array([F1, F2, F3, F4, F5])) == 0):
