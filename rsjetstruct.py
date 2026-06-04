@@ -28,6 +28,33 @@ def obsFluxMax(Fnumax_nossa, nuac, nusa, num, nuc, p):
         warnings.warn("No cases satisfied in obsFluxMax, flux returned is zero! Check input parameters.", RuntimeWarning)
     return F1 + F2 + F3 + F4 + F5
 
+
+def obsFluxMaxBySpecnum(Fnumax_nossa, nuac, nusa, num, nuc, p, specnum):
+    """obsFluxMax restricted to a given specnum, regardless of the actual
+    break-frequency ordering. Mirrors the case formulae of obsFluxMax but
+    selects by `specnum` directly. Used by RSjetStruct._spectrum when a
+    spectrum index is explicitly forced (the weighted-average path) so
+    that the SSA normalisation matches rs.py.calc_spect's per-specnum
+    formulae rather than the spec-1 normalisation that obsFluxMax would
+    silently fall through to when the actual ordering does not match the
+    forced specnum."""
+    if specnum == 1:
+        return Fnumax_nossa
+    elif specnum == 2:
+        return Fnumax_nossa * (nusa/num)**(-(p - 1)/2)
+    elif specnum == 3:
+        if num <= nuc:
+            return Fnumax_nossa * (nuc/num)**(-(p - 1)/2) * (nusa/nuc)**(-p/2)
+        else:
+            return Fnumax_nossa * (num/nuc)**(-1/2) * (nusa/num)**(-p/2)
+    elif specnum == 4:
+        return Fnumax_nossa * (nusa/nuc)**(-1/2)
+    elif specnum == 5:
+        return Fnumax_nossa
+    else:
+        raise ValueError("unsupported specnum=" + str(specnum))
+
+
     # if nuac <= nusa <= num <= nuc: # spectrum 1
     #     return Fnumax_nossa
     # elif nuac <= num <= nusa <= nuc: # spectrum 2
@@ -327,7 +354,7 @@ class RSjetStruct:
                 y22 = RSjetStruct._spectrum(self._tobs, self._nu, self._tcross, self._Fnumaxrs, self._numrs, self._nucutrs, self._nuars, self._p, self._k, specnum = 2, decelerated = True) # calc_spect(2, fsparams, f, nua, num, nuc, fnumax, decelerated=True)
                 y32 = RSjetStruct._spectrum(self._tobs, self._nu, self._tcross, self._Fnumaxrs, self._numrs, self._nucutrs, self._nuars, self._p, self._k, specnum = 3, decelerated = True)
                 
-                if tx3 is np.nan or tx2 >= largeTime: # if no second crossing then always in spectrum 1 post deceleration
+                if tx3 is np.nan or tx3 >= largeTime: # if no second crossing then always in spectrum 1 post deceleration
                     spect = (w31*y31 + w21*y21 + w11*y11)/(w31+w21+w11)*(self._tobs < self._tcross) + y12*(self._tobs >= self._tcross)
                 elif tx4 is np.nan or tx4 >= largeTime:    
                     spect = (w31*y31 + w21*y21 + w11*y11)/(w31+w21+w11)*(self._tobs < self._tcross) + (w12a*y12 + w22a*y22)/(w12a+w22a)*(self._tobs >= self._tcross)            
@@ -368,20 +395,28 @@ class RSjetStruct:
                 
             if (self._numrs_tcross < self._nucutrs_tcross < self._nuars_tcross): # TODO
                 # No crossings pre deceleration
+                # tx4 is the first chronological post-decel crossing (nua = nucut),
+                # tx3 is the second (nua = num). Ordering at tcross is num < nucut < nua,
+                # and nua descends through nucut first then num.
                 if self._kGamma <= 1:
                     tx3 = self._tnuarseqnumrsPostCrossWindCaseIc # (self._numrs_tcross/self._nuars_tcross)**(1/(laD2-lm2))*tdec
                     tx4 = self._tnuarseqnucutrsPostCrossWindCaseIc # (nuc3/nua3)**(1/(laE2-lc2))*tx3
                 else:
                     tx3 = self._tnuarseqnumrsPostCrossWindCaseIIc
                     tx4 = self._tnuarseqnucutrsPostCrossWindCaseIIc # (nuc3/nua3)**(1/(laE2-lc2))*tx3
-               
+
+                w32a = 1/(1 + (self._tobs/tx4)**pl)
+                w22a = 1/(1 + (self._tobs/tx4)**(-pl))
+                w22b = 1/(1 + (self._tobs/tx3)**pl)
+                w12b = 1/(1 + (self._tobs/tx3)**(-pl))
+
                 y31 = RSjetStruct._spectrum(self._tobs, self._nu, self._tcross, self._Fnumaxrs, self._numrs, self._nucutrs, self._nuars, self._p, self._k, specnum = 3, decelerated = False) # calc_spect(3, fsparams, f, nua, num, nuc, fnumax, decelerated=False)
                 y32 = RSjetStruct._spectrum(self._tobs, self._nu, self._tcross, self._Fnumaxrs, self._numrs, self._nucutrs, self._nuars, self._p, self._k, specnum = 3, decelerated = True) # calc_spect(3, fsparams, f, nua, num, nuc, fnumax, decelerated=True)
-                y22 = RSjetStruct._spectrum(self._tobs, self._nu, self._tcross, self._Fnumaxrs, self._numrs, self._nucutrs, self._nuars, self._p, self._k, specnum = 2, decelerated = True)   
-                y12 = RSjetStruct._spectrum(self._tobs, self._nu, self._tcross, self._Fnumaxrs, self._numrs, self._nucutrs, self._nuars, self._p, self._k, specnum = 1, decelerated = True) 
-                
+                y22 = RSjetStruct._spectrum(self._tobs, self._nu, self._tcross, self._Fnumaxrs, self._numrs, self._nucutrs, self._nuars, self._p, self._k, specnum = 2, decelerated = True)
+                y12 = RSjetStruct._spectrum(self._tobs, self._nu, self._tcross, self._Fnumaxrs, self._numrs, self._nucutrs, self._nuars, self._p, self._k, specnum = 1, decelerated = True)
+
                 #spect = y31*(self._tobs < self._tcross) + y32*(self._tobs >= self._tcross)
-                if tx2 is np.nan or tx2 >= largeTime:  
+                if tx4 is np.nan or tx4 >= largeTime: # no first post-decel crossing
                     spect = y31*(self._tobs < self._tcross) + y32*(self._tobs >= self._tcross)
                 elif tx3 is np.nan or tx3 >= largeTime: # in the case that post deceleration nua falls below nucut but not below num
                     spect = y31*(self._tobs < self._tcross) + (w32a*y32+w22a*y22)/(w32a+w22a)*(self._tobs >= self._tcross)
@@ -395,13 +430,21 @@ class RSjetStruct:
     @np.vectorize # TODO figure out a way to do without np.vectorize here to take advantage of spectrum.py's vectorization
     def _spectrum(_tobs, _nu, _tcross, _Fnumaxrs, _numrs, _nucutrs, _nuars, _p, _k, diagnostic = False, specnum = None, decelerated = None):
         """"""
-        _Fnutruemaxrs = obsFluxMax(_Fnumaxrs, smallNum, _nuars, _numrs, _nucutrs, p = _p)
-        
+        if specnum is None:
+            _Fnutruemaxrs = obsFluxMax(_Fnumaxrs, smallNum, _nuars, _numrs, _nucutrs, p = _p)
+        else:
+            # When the spectrum index is forced (weighted-average path),
+            # also force the matching SSA normalisation. The default
+            # obsFluxMax dispatches by frequency ordering and would
+            # otherwise return the spec-1 normalisation whenever the
+            # current ordering happens to be nua < num < nuc.
+            _Fnutruemaxrs = obsFluxMaxBySpecnum(_Fnumaxrs, smallNum, _nuars, _numrs, _nucutrs, _p, specnum)
+
         if decelerated is None:
             cut = _tobs > _tcross
         else:
             cut = decelerated
-        
+
         spec = Spectrum(_nu, _Fnutruemaxrs, smallNum, _nuars, _numrs, _nucutrs, p = _p, k = _k, cutoff = cut, specnum = specnum)
         
         nu, Fnu = spec.spectrum()
