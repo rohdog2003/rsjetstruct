@@ -12,16 +12,16 @@ import warnings
 smallNum = 1e-50 # a very small number close to zero
 largeTime = 1000000
 
-def obsFluxMax(Fnumax_nossa, nuac, nusa, num, nuc, p):
+def obsFluxMax(Fnumax_nossa, nuac, nusa, num, nuc, p, specnum = None): # TODO add by specnum?
     """computes the observed maximum flux from the theoretical maximum if no
     synchrotron self absorption were to occur.
     """
-    F1 = Fnumax_nossa * (nuac <= nusa <= num <= nuc) # spectrum 1
-    F2 = Fnumax_nossa * (nusa/num)**(-(p - 1)/2)*(nuac <= num <= nusa <= nuc)     # spectrum 2
-    F3 = Fnumax_nossa * (nuc/num)**(-(p - 1)/2) * (nusa/nuc)**(-p/2) * (nuac <= nusa and num <= nusa and nuc <= nusa and num <= nuc) + \
-         Fnumax_nossa * (num/nuc)**(-1/2) * (nusa/num)**(-p/2) * (nuac <= nusa and num <= nusa and nuc <= nusa and num > nuc)  # spectrum 3
-    F4 = Fnumax_nossa * (nusa/nuc)**(-1/2) * (nuac <= nusa and nuc <= nusa and nusa <= num) # spectrum 4
-    F5 = Fnumax_nossa * (nuac <= nusa <= nuc <= num) # spectrum 5
+    F1 = Fnumax_nossa * ((nuac <= nusa <= num <= nuc) * (specnum is None) + specnum == 1) # spectrum 1
+    F2 = Fnumax_nossa * (nusa/num)**(-(p - 1)/2) * ((nuac <= num <= nusa <= nuc) * (specnum is None) + specnum == 2)  # spectrum 2
+    F3 = (Fnumax_nossa * (nuc/num)**(-(p - 1)/2) * (nusa/nuc)**(-p/2) * ((nuac <= nusa and num <= nusa and nuc <= nusa and num <= nuc) * (specnum is None) + specnum == 3) + \
+         Fnumax_nossa * (num/nuc)**(-1/2) * (nusa/num)**(-p/2) * ((nuac <= nusa and num <= nusa and nuc <= nusa and num > nuc) * (specnum is None) + specnum == 3))  # spectrum 3
+    F4 = Fnumax_nossa * (nusa/nuc)**(-1/2) * ((nuac <= nusa and nuc <= nusa and nusa <= num) * (specnum is None) + specnum == 4) # spectrum 4
+    F5 = Fnumax_nossa * ((nuac <= nusa <= nuc <= num) * (specnum is None) + specnum == 5) # spectrum 5
     if (sum(np.array([nuac > nusa])) > 0):
         warnings.warn("nuac must be smaller than nusa", RuntimeWarning)
     if (sum(np.array([F1, F2, F3, F4, F5])) == 0):
@@ -53,7 +53,7 @@ class RSjetStruct:
     """
     
     def __init__(self, tobs, nu, tcross, Fnumaxrs_tcross, numrs_tcross, nucutrs_tcross, nuars_tcross, keps = 0, kGamma = 0,\
-                 k = 0, p = 2.5, g = None, tjet = np.inf, weigthed = True):
+                 k = 0, p = 2.5, g = None, tjet = np.inf, weighted = True):
         """Constructor
         
         Parameters
@@ -108,7 +108,7 @@ class RSjetStruct:
         self._ISM = RSjetStruct._ISM(k)
         self._g = RSjetStruct._g(self._ISM, g)
         self._tjet = tjet
-        self._weighted = True
+        self._weighted = weighted
         
         self._tfrac = self._tobs/self._tcross
         self._a = self._compute_a()
@@ -238,7 +238,7 @@ class RSjetStruct:
                     # weighted average
                     spect =  (w21*y21 + w11*y11)/(w21+w11)*(self._tobs < self._tcross) + (w12a*y12+(w22a*w22b)*y22+w32b*y32)/(w12a+w22a*w22b+w32b)*(self._tobs >= self._tcross)   
                 
-            if (self._numrs_tcross <= self._nuars_tcross <= self._nucutrs_tcross):  # spectrum 2
+            elif (self._numrs_tcross <= self._nuars_tcross <= self._nucutrs_tcross):  # spectrum 2
                 # Calculate tx1
                 if self._kGamma <= 1:
                     tx1up = self._tnuarseqnucutrsPostCrossISMcaseIb # (self._nucutrs_tcross/self._nuars_tcross)**(1/(laE2-lc2))*self._tcross                    
@@ -264,7 +264,7 @@ class RSjetStruct:
                 else: # nua stays between num and nucut post deceleration
                     spect = y21*(self._tobs < self._tcross) + y22*(self._tobs >= self._tcross)
                                 
-            if (self._numrs_tcross < self._nucutrs_tcross < self._nuars_tcross): # spectrum 3
+            elif (self._numrs_tcross < self._nucutrs_tcross < self._nuars_tcross): # spectrum 3
                 # Calculate tx1
                 tx1 = self._tnuarseqnucutrsPreCrossISMcaseIIIc # (self._nucutrs_tcross/self._nuars_tcross)**(1/(laF1-lc1))*self._tcross                    
                 
@@ -294,8 +294,10 @@ class RSjetStruct:
                     spect = (w21*y21 + w31*y31)/(w21+w31)*(self._tobs < self._tcross) + (w32a*y32+w22a*y22)/(w32a+w22a)*(self._tobs >= self._tcross)
                 else: # in the case that post deceleration nua falls below nucut and below num
                     spect = (w21*y21 + w31*y31)/(w21+w31)*(self._tobs < self._tcross) + (w32a*y32+(w22a*w22b)*y22+w12b*y12)/(w32a+w22a*w22b+w12b)*(self._tobs >= self._tcross)
-                
-            # TODO implement spectrum 4, 5, 6
+            
+            else: # TODO implement spectrum 4, 5, 6
+                warnings.warn("fast cooling cases unimplemented")
+                return np.full_like(self._nu, -1)
         
         else: # wind
             if (self._nuars_tcross < self._numrs_tcross < self._nucutrs_tcross):
@@ -327,14 +329,14 @@ class RSjetStruct:
                 y22 = RSjetStruct._spectrum(self._tobs, self._nu, self._tcross, self._Fnumaxrs, self._numrs, self._nucutrs, self._nuars, self._p, self._k, specnum = 2, decelerated = True) # calc_spect(2, fsparams, f, nua, num, nuc, fnumax, decelerated=True)
                 y32 = RSjetStruct._spectrum(self._tobs, self._nu, self._tcross, self._Fnumaxrs, self._numrs, self._nucutrs, self._nuars, self._p, self._k, specnum = 3, decelerated = True)
                 
-                if tx3 is np.nan or tx2 >= largeTime: # if no second crossing then always in spectrum 1 post deceleration
+                if tx3 is np.nan or tx3 >= largeTime: # if no second crossing then always in spectrum 1 post deceleration
                     spect = (w31*y31 + w21*y21 + w11*y11)/(w31+w21+w11)*(self._tobs < self._tcross) + y12*(self._tobs >= self._tcross)
                 elif tx4 is np.nan or tx4 >= largeTime:    
                     spect = (w31*y31 + w21*y21 + w11*y11)/(w31+w21+w11)*(self._tobs < self._tcross) + (w12a*y12 + w22a*y22)/(w12a+w22a)*(self._tobs >= self._tcross)            
                 else:
-                    spect = (w31*y31 + w21*y21 + w11*y11)/(w31+w21+w11)*(self._tobs < self._tcross) + (w12a*y12 + (w22a*w22b)*y22 + w32b*y32)/(w12a+w22a*w22b+y32)*(self._tobs >= self._tcross)
+                    spect = (w31*y31 + w21*y21 + w11*y11)/(w31+w21+w11)*(self._tobs < self._tcross) + (w12a*y12 + (w22a*w22b)*y22 + w32b*y32)/(w12a+w22a*w22b+w32b)*(self._tobs >= self._tcross)
                 
-            if (self._numrs_tcross < self._nuars_tcross < self._nucutrs_tcross): # TODO
+            elif (self._numrs_tcross < self._nuars_tcross < self._nucutrs_tcross): # TODO
                 # Calculate tx1
                 tx1 = self._tnuarseqnucutrsPreCrossWindCaseIIIb # (self._nuars_tcross/self._nucutrs_tcross)**(1/(lc1-laE1))*self._tcross
                 # Calculate tx2
@@ -347,10 +349,10 @@ class RSjetStruct:
                 
                 w31 = 1./(1.+(self._tobs/tx1)**pl)                    
                 w21 = 1./(1.+(self._tobs/tx1)**(-1.*pl))
-                w22a = 1/(1+(self._tobs/tx1down)**pl) 
-                w12a = 1/(1+(self._tobs/tx1down)**(-pl))
-                w22b = 1/(1+(self._tobs/tx1up)**pl) 
-                w32b = 1/(1+(self._tobs/tx1up)**(-pl))
+                w22a = 1/(1+(self._tobs/tx2down)**pl) 
+                w12a = 1/(1+(self._tobs/tx2down)**(-pl))
+                w22b = 1/(1+(self._tobs/tx2up)**pl) 
+                w32b = 1/(1+(self._tobs/tx2up)**(-pl))
                   
                 y31 = RSjetStruct._spectrum(self._tobs, self._nu, self._tcross, self._Fnumaxrs, self._numrs, self._nucutrs, self._nuars, self._p, self._k, specnum = 3, decelerated = False) # calc_spect(3, fsparams, f, nua, num, nuc, fnumax, decelerated=False)
                 y21 = RSjetStruct._spectrum(self._tobs, self._nu, self._tcross, self._Fnumaxrs, self._numrs, self._nucutrs, self._nuars, self._p, self._k, specnum = 2, decelerated = False) # calc_spect(2, fsparams, f, nua, num, nuc, fnumax, decelerated=False)                    
@@ -358,15 +360,15 @@ class RSjetStruct:
                 y32 = RSjetStruct._spectrum(self._tobs, self._nu, self._tcross, self._Fnumaxrs, self._numrs, self._nucutrs, self._nuars, self._p, self._k, specnum = 3, decelerated = True)
                 
                 # spect = (w31*y31 + w21*y21)/(w31+w21)*(self._tobs < self._tcross) + y22*(self._tobs >= self._tcross)
-                if not(tx1down is np.nan or tx1down >= largeTime) and (tx1up is np.nan or tx1up >= largeTime): # nua falls below num post deceleration
+                if not(tx2down is np.nan or tx2down >= largeTime) and (tx2up is np.nan or tx2up >= largeTime): # nua falls below num post deceleration
                     spect = (w31*y31 + w21*y21)/(w31+w21)*(self._tobs < self._tcross) + (w22a*y22+w12a*y12)/(w22a+w12a)*(self._tobs >= self._tcross)
-                elif (tx1down is np.nan or tx1down >= largeTime) and not(tx1up is np.nan or tx1up >= largeTime): # nua grows above nucut post deceleration
+                elif (tx2down is np.nan or tx2down >= largeTime) and not(tx2up is np.nan or tx2up >= largeTime): # nua grows above nucut post deceleration
                     spect = (w31*y31 + w21*y21)/(w31+w21)*(self._tobs < self._tcross) + (w22b*y22+w32b*y32)/(w22b+w32b)*(self._tobs >= self._tcross)
                 else: # nua stays between num and nucut post deceleration
                     spect = (w31*y31 + w21*y21)/(w31+w21)*(self._tobs < self._tcross) + y22*(self._tobs >= self._tcross)
                                 
                 
-            if (self._numrs_tcross < self._nucutrs_tcross < self._nuars_tcross): # TODO
+            elif (self._numrs_tcross < self._nucutrs_tcross < self._nuars_tcross): # TODO
                 # No crossings pre deceleration
                 if self._kGamma <= 1:
                     tx3 = self._tnuarseqnumrsPostCrossWindCaseIc # (self._numrs_tcross/self._nuars_tcross)**(1/(laD2-lm2))*tdec
@@ -375,27 +377,35 @@ class RSjetStruct:
                     tx3 = self._tnuarseqnumrsPostCrossWindCaseIIc
                     tx4 = self._tnuarseqnucutrsPostCrossWindCaseIIc # (nuc3/nua3)**(1/(laE2-lc2))*tx3
                
+
+                w32a = 1/(1 + (self._tobs/tx3)**pl) # a, and b are here because 2 potential crossings   
+                w22a = 1/(1 + (self._tobs/tx3)**(-pl))
+                w22b = 1/(1 + (self._tobs/tx4)**pl)
+                w12b = 1/(1 + (self._tobs/tx4)**(-pl))
+               
                 y31 = RSjetStruct._spectrum(self._tobs, self._nu, self._tcross, self._Fnumaxrs, self._numrs, self._nucutrs, self._nuars, self._p, self._k, specnum = 3, decelerated = False) # calc_spect(3, fsparams, f, nua, num, nuc, fnumax, decelerated=False)
                 y32 = RSjetStruct._spectrum(self._tobs, self._nu, self._tcross, self._Fnumaxrs, self._numrs, self._nucutrs, self._nuars, self._p, self._k, specnum = 3, decelerated = True) # calc_spect(3, fsparams, f, nua, num, nuc, fnumax, decelerated=True)
                 y22 = RSjetStruct._spectrum(self._tobs, self._nu, self._tcross, self._Fnumaxrs, self._numrs, self._nucutrs, self._nuars, self._p, self._k, specnum = 2, decelerated = True)   
                 y12 = RSjetStruct._spectrum(self._tobs, self._nu, self._tcross, self._Fnumaxrs, self._numrs, self._nucutrs, self._nuars, self._p, self._k, specnum = 1, decelerated = True) 
                 
                 #spect = y31*(self._tobs < self._tcross) + y32*(self._tobs >= self._tcross)
-                if tx2 is np.nan or tx2 >= largeTime:  
+                if tx3 is np.nan or tx3 >= largeTime:  
                     spect = y31*(self._tobs < self._tcross) + y32*(self._tobs >= self._tcross)
-                elif tx3 is np.nan or tx3 >= largeTime: # in the case that post deceleration nua falls below nucut but not below num
+                elif tx4 is np.nan or tx4 >= largeTime: # in the case that post deceleration nua falls below nucut but not below num
                     spect = y31*(self._tobs < self._tcross) + (w32a*y32+w22a*y22)/(w32a+w22a)*(self._tobs >= self._tcross)
                 else: # in the case that post deceleration nua falls below nucut and below num
                     spect = y31*(self._tobs < self._tcross) + (w32a*y32+(w22a*w22b)*y22+w12b*y12)/(w32a+w22a*w22b+w12b)*(self._tobs >= self._tcross)
                 
-            # TODO implement spectrum 4, 5, 6
+            else: # TODO implement spectrum 4, 5, 6
+                warnings.warn("fast cooling cases unimplemented")
+                return np.full_like(self._nu, -1)
         
         return spect
             
     @np.vectorize # TODO figure out a way to do without np.vectorize here to take advantage of spectrum.py's vectorization
     def _spectrum(_tobs, _nu, _tcross, _Fnumaxrs, _numrs, _nucutrs, _nuars, _p, _k, diagnostic = False, specnum = None, decelerated = None):
         """"""
-        _Fnutruemaxrs = obsFluxMax(_Fnumaxrs, smallNum, _nuars, _numrs, _nucutrs, p = _p)
+        _Fnutruemaxrs = obsFluxMax(_Fnumaxrs, smallNum, _nuars, _numrs, _nucutrs, p = _p, specnum = specnum)
         
         if decelerated is None:
             cut = _tobs > _tcross

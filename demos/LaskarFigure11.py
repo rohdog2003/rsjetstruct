@@ -628,6 +628,7 @@ def plotTopHatFitpRS(tobs_grouped, nu_grouped, Fnu_grouped, err_FnuGrouped, colo
         modelFit = RSjetStruct(t, nu, t_cross_small, *10**popt[:4], 0, 0, k = k, p = popt[-1], g = popt[-2])
         #nu_model, 
         Fnu_model = modelFit.spectrum()
+        print(Fnu_model)
         plt.plot(modelFit._nu, Fnu_model, linestyle = ":", color = getColor(tobs_grouped, 0, t = t))
         modelFS = FSjetTopHat(nu, 10**-0.616, 10**-0.221, 1, 10**-3.612, 10**54.04/1e52, t, 0.151, p = p, k = k)
         nu_FS, Fnu_FS = modelFS.spectrum()

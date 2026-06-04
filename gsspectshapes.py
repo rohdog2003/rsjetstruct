@@ -35,7 +35,7 @@ class Spectrum:
     
     def spectrum(self): # FIXME something bad will probably happen if any of the frequencies are equal
         """"""
-        if (self._nuac <= self._nusa <= self._num <= self._nuc) or self._specnum == 1: # spectrum 1
+        if ((self._nuac <= self._nusa <= self._num <= self._nuc) and self._specnum == None) or self._specnum == 1: # spectrum 1
             if self._Fnu1 is None:
                 # Fnu1 = self._Fnumax/self._spectrum1(self._num, 1); # TODO
                 Fnu1 = self._Fnumax * (self._nusa/self._num)**self._getSlope(2)[0]
@@ -44,7 +44,7 @@ class Spectrum:
             
             spec = self._spectrum1(self._nu, Fnu1)
             
-        elif (self._nuac <= self._num <= self._nusa <= self._nuc) or self._specnum == 2: # spectrum 2
+        elif ((self._nuac <= self._num <= self._nusa <= self._nuc) and self._specnum == None) or self._specnum == 2: # spectrum 2
             if self._Fnu4 is None:
                 #Fnu4 = self._Fnumax/self._spectrum2(self._nusa, 1)
                 Fnu4 = self._Fnumax * (self._num/self._nusa)**self._getSlope(5)[0]
@@ -53,7 +53,7 @@ class Spectrum:
             
             spec = self._spectrum2(self._nu, Fnu4)
             
-        elif (self._nuac <= self._nusa and self._num <= self._nusa and self._nuc <= self._nusa) or self._specnum == 3: # spectrum 3
+        elif ((self._nuac <= self._nusa and self._num <= self._nusa and self._nuc <= self._nusa) and self._specnum == None) or self._specnum == 3: # spectrum 3
             if self._Fnu4 is None:
                 #Fnu4 = self._Fnumax/self._spectrum3(self._nusa, 1)
                 Fnu4 = self._Fnumax * (self._num/self._nusa)**self._getSlope(5)[0]
@@ -62,7 +62,7 @@ class Spectrum:
             
             spec = self._spectrum3(self._nu, Fnu4)
             
-        elif (self._nuac <= self._nusa and self._nuc <= self._nusa and self._nusa <= self._num) or self._specnum == 4: # spectrum 4
+        elif ((self._nuac <= self._nusa and self._nuc <= self._nusa and self._nusa <= self._num) and self._specnum == None) or self._specnum == 4: # spectrum 4
             if self._Fnu7 is None:
                 #Fnu7 = self._Fnumax/self._spectrum4(self._nusa, 1)
                 Fnu7 = self._Fnumax * (self._nuac/self._nusa)**self._getSlope(8)[0]
@@ -71,7 +71,7 @@ class Spectrum:
             
             spec = self._spectrum4(self._nu, Fnu7)
             
-        elif (self._nuac <= self._nusa <= self._nuc <= self._num) or self._specnum == 5: # spectrum 5
+        elif ((self._nuac <= self._nusa <= self._nuc <= self._num) and self._specnum == None) or self._specnum == 5: # spectrum 5
             if self._Fnu7 is None:
                 #Fnu7 = self._Fnumax/self._spectrum5(self._nuc, 1)
                 Fnu7 = self._Fnumax * (self._nusa/self._nuc)**self._getSlope(11)[0] * (self._nuac/self._nusa)**self._getSlope(10)[0]
@@ -111,7 +111,7 @@ class Spectrum:
         
         s = self._getSlope(12)[2]
         
-        return (tildeFnu3**(-s) + tildeFnu3atnu3**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nub(3)))))**(-s)
+        return (tildeFnu3**(-s) + tildeFnu3atnu3**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nub(3)))))**(-1/s)
     
     def _FnuCUT3(self, nu, Fnu4):
         """Cutoff for spectra 3"""
@@ -120,7 +120,7 @@ class Spectrum:
         
         s = self._getSlope(13)[2]
         
-        return (precut**(-s) + precutatnu3or11**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nuc))))**(-s)
+        return (precut**(-s) + precutatnu3or11**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nuc))))**(-1/s)
     
     def _FnuCUT4(self, nu, Fnu7):
         """Cutoff for spectra 4"""
@@ -133,7 +133,7 @@ class Spectrum:
             
         s = self._getSlope(14)[2]           
             
-        return (precut**(-s) + precutatnu11**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nub(11)))))**(-s)
+        return (precut**(-s) + precutatnu11**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nub(11)))))**(-1/s)
     
     def _tildeFnuCUT5(self, nu):
         """Cutoff for spectra 5"""
@@ -142,7 +142,7 @@ class Spectrum:
             
         s = self._getSlope(15)[2]
             
-        return (tildeFnu11**(-s) + tildeFnu11atnu11**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nub(11)))))**(-s)
+        return (tildeFnu11**(-s) + tildeFnu11atnu11**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nub(11)))))**(-1/s)
     
     def _spectrum1(self, nu, Fnu1):
         """GS02 (5).
