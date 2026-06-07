@@ -106,44 +106,106 @@ class Spectrum:
     
     def _tildeFnuCUT12(self, nu):
         """Cutoff for spectra 1 and 2"""
-        tildeFnu3 = Spectrum._tildeFnub(nu, self._nub(3), *self._getSlope(3))
-        tildeFnu3atnu3 = Spectrum._tildeFnub(self._nub(3), self._nub(3), *self._getSlope(3))
         
-        s = self._getSlope(12)[2]
+        mask = nu/self._nub(3) < 7e2 # mask for overflow
         
-        return (tildeFnu3**(-s) + tildeFnu3atnu3**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nub(3)))))**(-1/s)
-    
+        if isinstance(nu, np.ndarray):
+            tildeFnu3 = Spectrum._tildeFnub(nu[mask], self._nub(3), *self._getSlope(3))
+            tildeFnu3atnu3 = Spectrum._tildeFnub(self._nub(3), self._nub(3), *self._getSlope(3))
+            
+            s = self._getSlope(12)[2]
+            
+            
+            first = (tildeFnu3**(-s) + tildeFnu3atnu3**(-s) * np.exp(-s) * (np.exp(s * (nu[mask]/self._nub(3))) - 1))**(-1/s)
+            second = np.full_like(nu[np.logical_not(mask)], 0)
+            
+            return np.concatenate((first, second))
+        
+        else:
+            tildeFnu3 = Spectrum._tildeFnub(nu, self._nub(3), *self._getSlope(3))
+            tildeFnu3atnu3 = Spectrum._tildeFnub(self._nub(3), self._nub(3), *self._getSlope(3))
+            
+            s = self._getSlope(12)[2]
+            
+            return (tildeFnu3**(-s) + tildeFnu3atnu3**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nub(3))) - 1))**(-1/s)
+        
     def _FnuCUT3(self, nu, Fnu4):
         """Cutoff for spectra 3"""
-        precut = Spectrum._Fnu4(nu, self._nub(4), Fnu4, *self._getSlope(4)) * Spectrum._tildeFnub(nu, self._nub(6), *self._getSlope(6))
-        precutatnu3or11 = Spectrum._Fnu4(self._nuc, self._nub(4), Fnu4, *self._getSlope(4)) * Spectrum._tildeFnub(nu, self._nub(6), *self._getSlope(6))
+        mask = nu/self._nub(3) < 7e2 # mask for overflow
         
-        s = self._getSlope(13)[2]
+        if isinstance(nu, np.ndarray):
+            precut = Spectrum._Fnu4(nu[mask], self._nub(4), Fnu4, *self._getSlope(4)) * Spectrum._tildeFnub(nu[mask], self._nub(6), *self._getSlope(6))
+            precutatnu3or11 = Spectrum._Fnu4(self._nuc, self._nub(4), Fnu4, *self._getSlope(4)) * Spectrum._tildeFnub(nu, self._nub(6), *self._getSlope(6))
+            
+            s = self._getSlope(13)[2]
         
-        return (precut**(-s) + precutatnu3or11**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nuc))))**(-1/s)
+            first = (precut**(-s) + precutatnu3or11**(-s) * np.exp(-s) * (np.exp(s * (nu[mask]/self._nuc)) - 1))**(-1/s)
+            second = np.full_like(nu[np.logical_not(mask)], 0)
+            
+            return np.concatenate((first, second))
+        
+        else: 
+            precut = Spectrum._Fnu4(nu, self._nub(4), Fnu4, *self._getSlope(4)) * Spectrum._tildeFnub(nu, self._nub(6), *self._getSlope(6))
+            precutatnu3or11 = Spectrum._Fnu4(self._nuc, self._nub(4), Fnu4, *self._getSlope(4)) * Spectrum._tildeFnub(nu, self._nub(6), *self._getSlope(6))
+            
+            s = self._getSlope(13)[2]
+            
+            return (precut**(-s) + precutatnu3or11**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nuc)) - 1))**(-1/s)
     
     def _FnuCUT4(self, nu, Fnu7):
         """Cutoff for spectra 4"""
-        precut = Spectrum._Fnub(nu, self._nub(7), Fnu7, *self._getSlope(7)) *\
-                 Spectrum._tildeFnub(nu, self._nub(8), *self._getSlope(8)) *\
-                 Spectrum._tildeFnub(nu, self._nub(9), *self._getSlope(9))
-        precutatnu11 = Spectrum._Fnub(self._nub(11), self._nub(7), Fnu7, *self._getSlope(7)) *\
-                       Spectrum._tildeFnub(self._nub(11), self._nub(8), *self._getSlope(8)) *\
-                       Spectrum._tildeFnub(self._nub(11), self._nub(9), *self._getSlope(9))
+        mask = nu/self._nub(3) < 7e2 # mask for overflow
+        
+        if isinstance(nu, np.ndarray):
+            precut = Spectrum._Fnub(nu[mask], self._nub(7), Fnu7, *self._getSlope(7)) *\
+                     Spectrum._tildeFnub(nu[mask], self._nub(8), *self._getSlope(8)) *\
+                     Spectrum._tildeFnub(nu[mask], self._nub(9), *self._getSlope(9))
+            precutatnu11 = Spectrum._Fnub(self._nub(11), self._nub(7), Fnu7, *self._getSlope(7)) *\
+                           Spectrum._tildeFnub(self._nub(11), self._nub(8), *self._getSlope(8)) *\
+                           Spectrum._tildeFnub(self._nub(11), self._nub(9), *self._getSlope(9))
+                
+            s = self._getSlope(14)[2]           
+                
+            first = (precut**(-s) + precutatnu11**(-s) * np.exp(-s) * (np.exp(s * (nu[mask]/self._nub(11))) - 1))**(-1/s)
+            second = np.full_like(nu[np.logical_not(mask)], 0)
             
-        s = self._getSlope(14)[2]           
-            
-        return (precut**(-s) + precutatnu11**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nub(11)))))**(-1/s)
+            return np.concatenate((first, second))
+        
+        else:    
+            precut = Spectrum._Fnub(nu, self._nub(7), Fnu7, *self._getSlope(7)) *\
+                     Spectrum._tildeFnub(nu, self._nub(8), *self._getSlope(8)) *\
+                     Spectrum._tildeFnub(nu, self._nub(9), *self._getSlope(9))
+            precutatnu11 = Spectrum._Fnub(self._nub(11), self._nub(7), Fnu7, *self._getSlope(7)) *\
+                           Spectrum._tildeFnub(self._nub(11), self._nub(8), *self._getSlope(8)) *\
+                           Spectrum._tildeFnub(self._nub(11), self._nub(9), *self._getSlope(9))
+                
+            s = self._getSlope(14)[2]           
+                
+            return (precut**(-s) + precutatnu11**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nub(11))) - 1))**(-1/s)
     
     def _tildeFnuCUT5(self, nu):
         """Cutoff for spectra 5"""
-        tildeFnu11 = Spectrum._tildeFnub(nu, self._nub(11), *self._getSlope(11))
-        tildeFnu11atnu11 = Spectrum._tildeFnub(self._nub(11), self._nub(11), *self._getSlope(11))
+        mask = nu/self._nub(3) < 7e2 # mask for overflow
+        
+        if isinstance(nu, np.ndarray):
+            tildeFnu11 = Spectrum._tildeFnub(nu[mask], self._nub(11), *self._getSlope(11))
+            tildeFnu11atnu11 = Spectrum._tildeFnub(self._nub(11), self._nub(11), *self._getSlope(11))
+                
+            s = self._getSlope(15)[2]
+                
+            first = (tildeFnu11**(-s) + tildeFnu11atnu11**(-s) * np.exp(-s) * (np.exp(s * (nu[mask]/self._nub(11))) - 1))**(-1/s)
+            second = np.full_like(nu[np.logical_not(mask)], 0)
             
-        s = self._getSlope(15)[2]
+            return np.concatenate((first, second))
             
-        return (tildeFnu11**(-s) + tildeFnu11atnu11**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nub(11)))))**(-1/s)
-    
+        else:
+            tildeFnu11 = Spectrum._tildeFnub(nu, self._nub(11), *self._getSlope(11))
+            tildeFnu11atnu11 = Spectrum._tildeFnub(self._nub(11), self._nub(11), *self._getSlope(11))
+                
+            s = self._getSlope(15)[2]
+                
+            return (tildeFnu11**(-s) + tildeFnu11atnu11**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nub(11))) - 1))**(-1/s)
+        
     def _spectrum1(self, nu, Fnu1):
         """GS02 (5).
         """
