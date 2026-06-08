@@ -8,6 +8,7 @@ import numpy as np
 from .gsspectshapes import Spectrum
 #from obsfluxmax import *
 import warnings
+from .utilities import where # TODO implement this as needed
 
 smallNum = 1e-50 # a very small number close to zero
 largeTime = 1000000
@@ -196,10 +197,6 @@ class RSjetStruct:
             
     def _spectrumweighted(self):
         """Spectrum weighting for slow cooling"""
-        # TODO consider additional crossings for structured jet case
-        # TODO vectorize maybe ?
-        # RSjetStruct._spectrum(self._tobs, self._nu, self._tcross, self._Fnumaxrs, self._numrs, self._nucutrs, self._nuars, self._p, self._k, specnum = 1)
-        
         pl = 2
         firstweight = lambda x, x0, power : 1. / (1. + np.clip(x/x0, a_min=None, a_max=1e10)**power)
         
@@ -220,7 +217,7 @@ class RSjetStruct:
                 w11 = 1./(1.+(self._tobs/tx1)**(-1.*15))
                 w12a = 1./(1.+(self._tobs/tx2)**pl)
                 w22a = 1./(1.+(self._tobs/tx2)**(-1.*pl))
-                w22b = 1/(1+(self._tobs/tx3)**pl) # TODO check validity/if need to use firstweight function for all weights I've added
+                w22b = 1/(1+(self._tobs/tx3)**pl)
                 w32b = 1/(1+(self._tobs/tx3)**(-pl))
                 
                 # spectra
@@ -336,7 +333,7 @@ class RSjetStruct:
                 else:
                     spect = (w31*y31 + w21*y21 + w11*y11)/(w31+w21+w11)*(self._tobs < self._tcross) + (w12a*y12 + (w22a*w22b)*y22 + w32b*y32)/(w12a+w22a*w22b+w32b)*(self._tobs >= self._tcross)
                 
-            elif (self._numrs_tcross < self._nuars_tcross < self._nucutrs_tcross): # TODO
+            elif (self._numrs_tcross < self._nuars_tcross < self._nucutrs_tcross):
                 # Calculate tx1
                 tx1 = self._tnuarseqnucutrsPreCrossWindCaseIIIb # (self._nuars_tcross/self._nucutrs_tcross)**(1/(lc1-laE1))*self._tcross
                 # Calculate tx2
@@ -368,7 +365,7 @@ class RSjetStruct:
                     spect = (w31*y31 + w21*y21)/(w31+w21)*(self._tobs < self._tcross) + y22*(self._tobs >= self._tcross)
                                 
                 
-            elif (self._numrs_tcross < self._nucutrs_tcross < self._nuars_tcross): # TODO
+            elif (self._numrs_tcross < self._nucutrs_tcross < self._nuars_tcross):
                 # No crossings pre deceleration
                 if self._kGamma <= 1:
                     tx3 = self._tnuarseqnumrsPostCrossWindCaseIc # (self._numrs_tcross/self._nuars_tcross)**(1/(laD2-lm2))*tdec
@@ -545,16 +542,19 @@ class RSjetStruct:
     def _compute_postCrossCaseA(self, observable, scale_caseA, teqmcaseA, teqcutcaseA, caseAstr, caseBstr, caseCstr):
         """"""
         nuars_caseA = scale_caseA * observable
-        nuars_caseA = np.where(nuars_caseA < self._numrs, nuars_caseA,\
-                                                          observable *\
+        nuars_caseA =    where(nuars_caseA < self._numrs, lambda x: x,\
+                                                          lambda t: observable *\
                                                           (teqmcaseA/self._tcross)**self._alphaDict["nuars"][caseAstr] *\
-                                                          (self._tobs/teqmcaseA)**self._alphaDict["nuars"][caseBstr])
+                                                          (t/teqmcaseA)**self._alphaDict["nuars"][caseBstr], argsa = [nuars_caseA], argsb = [self._tobs])
         nuars_caseA = self._BCmerge(nuars_caseA, caseBstr, caseCstr, above = False)
-        nuars_caseA = np.where((nuars_caseA <= self._nucutrs), nuars_caseA,\
-                                                              observable *\
-                                                              (teqmcaseA/self._tcross)**self._alphaDict["nuars"][caseAstr] *\
-                                                              (teqcutcaseA/teqmcaseA)**self._alphaDict["nuars"][caseBstr] *\
-                                                              (self._tobs/teqcutcaseA)**self._alphaDict["nuars"][caseCstr])
+        
+        if np.any(np.logical_not(nuars_caseA <= self._nucutrs)):
+            nuars_caseA =   where((nuars_caseA <= self._nucutrs), lambda x: x,\
+                                                                  lambda t: observable *\
+                                                                  (teqmcaseA/self._tcross)**self._alphaDict["nuars"][caseAstr] *\
+                                                                  (teqcutcaseA/teqmcaseA)**self._alphaDict["nuars"][caseBstr] *\
+                                                                  (t/teqcutcaseA)**self._alphaDict["nuars"][caseCstr], argsa = [nuars_caseA], argsb = [self._tobs])
+        
         return nuars_caseA
     
     def _compute_preCrossCaseA(self, observable, teqmcaseIIIA, teqcutcaseIIIA, caseIIIAstr, caseIIIBstr, caseIIICstr):
@@ -583,15 +583,15 @@ class RSjetStruct:
     def _compute_postCrossCaseB(self, observable, scale_caseB, teqmcaseB, teqcutcaseB, caseAstr, caseBstr, caseCstr):
         """"""
         nuars_caseB = scale_caseB * observable
-        nuars_caseB = np.where(nuars_caseB > self._numrs, nuars_caseB,\
-                                                          observable *\
+        nuars_caseB =    where(nuars_caseB > self._numrs, lambda x: x,\
+                                                          lambda t: observable *\
                                                           (teqmcaseB/self._tcross)**self._alphaDict["nuars"][caseBstr] *\
-                                                          (self._tobs/teqmcaseB)**self._alphaDict["nuars"][caseAstr])
+                                                          (t/teqmcaseB)**self._alphaDict["nuars"][caseAstr], argsa = [nuars_caseB], argsb = [self._tobs])
         nuars_caseB = self._BCmerge(nuars_caseB, caseBstr, caseCstr, above = False)
-        nuars_caseB = np.where((nuars_caseB <= self._nucutrs), nuars_caseB,\
-                                                              observable *\
+        nuars_caseB =    where((nuars_caseB <= self._nucutrs), lambda x: x,\
+                                                              lambda t: observable *\
                                                               (teqcutcaseB/self._tcross)**self._alphaDict["nuars"][caseBstr] *\
-                                                              (self._tobs/teqcutcaseB)**self._alphaDict["nuars"][caseCstr])
+                                                              (t/teqcutcaseB)**self._alphaDict["nuars"][caseCstr], argsa = [nuars_caseB], argsb = [self._tobs])
     
         return nuars_caseB
     
@@ -621,16 +621,17 @@ class RSjetStruct:
         
         nuars_caseC = scale_caseC * observable
         nuars_caseC = self._BCmerge(nuars_caseC, caseBstr, caseCstr, above = True)
-        nuars_caseC = np.where(nuars_caseC >= self._nucutrs, nuars_caseC,\
-                                                             observable *\
+        nuars_caseC =    where(nuars_caseC >= self._nucutrs, lambda x: x,\
+                                                             lambda t: observable *\
                                                              (teqcutcaseC/self._tcross)**self._alphaDict["nuars"][caseCstr] *\
-                                                             (self._tobs/teqcutcaseC)**self._alphaDict["nuars"][caseBstr])
-        nuars_caseC = np.where(nuars_caseC > self._numrs, nuars_caseC,\
-                                                          observable *\
-                                                          (teqcutcaseC/self._tcross)**self._alphaDict["nuars"][caseCstr] *\
-                                                          (teqmcaseC/teqcutcaseC)**self._alphaDict["nuars"][caseBstr] *\
-                                                          (self._tobs/teqmcaseC)**self._alphaDict["nuars"][caseCstr])
-        
+                                                             (t/teqcutcaseC)**self._alphaDict["nuars"][caseBstr], argsa = [nuars_caseC], argsb = [self._tobs])
+        if np.any(np.logical_not(nuars_caseC > self._numrs)):
+            nuars_caseC =    where(nuars_caseC > self._numrs, lambda x: x,\
+                                                              lambda t: observable *\
+                                                              (teqcutcaseC/self._tcross)**self._alphaDict["nuars"][caseCstr] *\
+                                                              (teqmcaseC/teqcutcaseC)**self._alphaDict["nuars"][caseBstr] *\
+                                                              (t/teqmcaseC)**self._alphaDict["nuars"][caseAstr], argsa = [nuars_caseC], argsb = [self._tobs])
+            
         return nuars_caseC
         
     def _compute_preCrossCaseC(self, observable, teqmcaseIIIC, teqcutcaseIIIC, caseIIIAstr, caseIIIBstr, caseIIICstr):

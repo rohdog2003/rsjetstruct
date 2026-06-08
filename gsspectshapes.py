@@ -115,11 +115,12 @@ class Spectrum:
             
             s = self._getSlope(12)[2]
             
+            result = np.empty(mask.shape, dtype = float)
             
-            first = (tildeFnu3**(-s) + tildeFnu3atnu3**(-s) * np.exp(-s) * (np.exp(s * (nu[mask]/self._nub(3))) - 1))**(-1/s)
-            second = np.full_like(nu[np.logical_not(mask)], 0)
+            result[mask] = (tildeFnu3**(-s) + tildeFnu3atnu3**(-s) * np.exp(-s) * (np.exp(s * (nu[mask]/self._nub(3))) - 1))**(-1/s)
+            result[~mask] = np.full_like(nu[np.logical_not(mask)], 0)
             
-            return np.concatenate((first, second))
+            return result
         
         else:
             tildeFnu3 = Spectrum._tildeFnub(nu, self._nub(3), *self._getSlope(3))
@@ -127,9 +128,12 @@ class Spectrum:
             
             s = self._getSlope(12)[2]
             
-            return (tildeFnu3**(-s) + tildeFnu3atnu3**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nub(3))) - 1))**(-1/s)
+            if mask:
+                return (tildeFnu3**(-s) + tildeFnu3atnu3**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nub(3))) - 1))**(-1/s)
+            else:
+                return 0
         
-    def _FnuCUT3(self, nu, Fnu4):
+    def _FnuCUT3(self, nu, Fnu4): # TODO make sure order of nu can't matter
         """Cutoff for spectra 3"""
         mask = nu/self._nub(3) < 7e2 # mask for overflow
         
@@ -139,10 +143,12 @@ class Spectrum:
             
             s = self._getSlope(13)[2]
         
-            first = (precut**(-s) + precutatnu3or11**(-s) * np.exp(-s) * (np.exp(s * (nu[mask]/self._nuc)) - 1))**(-1/s)
-            second = np.full_like(nu[np.logical_not(mask)], 0)
+            result = np.empty(mask.shape, dtype = float)
             
-            return np.concatenate((first, second))
+            result[mask] = (precut**(-s) + precutatnu3or11**(-s) * np.exp(-s) * (np.exp(s * (nu[mask]/self._nuc)) - 1))**(-1/s)
+            result[~mask] = np.full_like(nu[np.logical_not(mask)], 0)
+            
+            return result
         
         else: 
             precut = Spectrum._Fnu4(nu, self._nub(4), Fnu4, *self._getSlope(4)) * Spectrum._tildeFnub(nu, self._nub(6), *self._getSlope(6))
@@ -150,7 +156,10 @@ class Spectrum:
             
             s = self._getSlope(13)[2]
             
-            return (precut**(-s) + precutatnu3or11**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nuc)) - 1))**(-1/s)
+            if mask:
+                return (precut**(-s) + precutatnu3or11**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nuc)) - 1))**(-1/s)
+            else:
+                return 0
     
     def _FnuCUT4(self, nu, Fnu7):
         """Cutoff for spectra 4"""
@@ -166,10 +175,12 @@ class Spectrum:
                 
             s = self._getSlope(14)[2]           
                 
-            first = (precut**(-s) + precutatnu11**(-s) * np.exp(-s) * (np.exp(s * (nu[mask]/self._nub(11))) - 1))**(-1/s)
-            second = np.full_like(nu[np.logical_not(mask)], 0)
+            result = np.empty(mask.shape, dtype = float)
             
-            return np.concatenate((first, second))
+            result[mask] = (precut**(-s) + precutatnu11**(-s) * np.exp(-s) * (np.exp(s * (nu[mask]/self._nub(11))) - 1))**(-1/s)
+            result[~mask] = np.full_like(nu[np.logical_not(mask)], 0)
+            
+            return result
         
         else:    
             precut = Spectrum._Fnub(nu, self._nub(7), Fnu7, *self._getSlope(7)) *\
@@ -180,8 +191,11 @@ class Spectrum:
                            Spectrum._tildeFnub(self._nub(11), self._nub(9), *self._getSlope(9))
                 
             s = self._getSlope(14)[2]           
-                
-            return (precut**(-s) + precutatnu11**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nub(11))) - 1))**(-1/s)
+            
+            if mask:
+                return (precut**(-s) + precutatnu11**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nub(11))) - 1))**(-1/s)
+            else:
+                return 0
     
     def _tildeFnuCUT5(self, nu):
         """Cutoff for spectra 5"""
@@ -192,11 +206,13 @@ class Spectrum:
             tildeFnu11atnu11 = Spectrum._tildeFnub(self._nub(11), self._nub(11), *self._getSlope(11))
                 
             s = self._getSlope(15)[2]
-                
-            first = (tildeFnu11**(-s) + tildeFnu11atnu11**(-s) * np.exp(-s) * (np.exp(s * (nu[mask]/self._nub(11))) - 1))**(-1/s)
-            second = np.full_like(nu[np.logical_not(mask)], 0)
             
-            return np.concatenate((first, second))
+            result = np.empty(mask.shape, dtype = float)
+            
+            result[mask] = (tildeFnu11**(-s) + tildeFnu11atnu11**(-s) * np.exp(-s) * (np.exp(s * (nu[mask]/self._nub(11))) - 1))**(-1/s)
+            result[~mask] = np.full_like(nu[np.logical_not(mask)], 0)
+            
+            return result
             
         else:
             tildeFnu11 = Spectrum._tildeFnub(nu, self._nub(11), *self._getSlope(11))
@@ -204,7 +220,9 @@ class Spectrum:
                 
             s = self._getSlope(15)[2]
                 
-            return (tildeFnu11**(-s) + tildeFnu11atnu11**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nub(11))) - 1))**(-1/s)
+            if mask:
+                return (tildeFnu11**(-s) + tildeFnu11atnu11**(-s) * np.exp(-s) * (np.exp(s * (nu/self._nub(11))) - 1))**(-1/s)
+            else: return 0
         
     def _spectrum1(self, nu, Fnu1):
         """GS02 (5).
