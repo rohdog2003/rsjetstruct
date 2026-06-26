@@ -54,7 +54,7 @@ class RSjetStruct:
     """
     
     def __init__(self, tobs, nu, tcross, Fnumaxrs_tcross, numrs_tcross, nucutrs_tcross, nuars_tcross, keps = 0, kGamma = 0,\
-                 k = 0, p = 2.5, g = None, tjet = np.inf, weighted = True):
+                 k = 0, p = 2.5, g = None, tjet = np.inf, weighted = True, tNRFS = np.inf):
         """Constructor
         
         Parameters
@@ -110,6 +110,7 @@ class RSjetStruct:
         self._g = RSjetStruct._g(self._ISM, g)
         self._tjet = tjet
         self._weighted = weighted
+        self._tNRFS = tNRFS
         
         self._tfrac = self._tobs/self._tcross
         self._a = self._compute_a()
@@ -664,11 +665,21 @@ class RSjetStruct:
                                    np.where(self._kGamma <= 1, observable * windScale_caseIV,\
                                                               observable * windScale_caseV))
     
+    def _compute_casePostNRFS(self, observable, ISMscale_caseVI, ISMscale_caseVII, windScale_caseVI, windScale_caseVII):
+        """"""
+        return np.where(self._ISM, np.where(self._kGamma <= 1, observable * ISMscale_caseVI,\
+                                                              observable * ISMscale_caseVII),\
+                                   np.where(self._kGamma <= 1, observable * windScale_caseVI,\
+                                                              observable * windScale_caseVII))
+    
     def _caseJet(self, i1, i2):
         """"""
         return np.where(self._tobs < self._tjet, i1, i2)
     
-    def Fnumaxrs(self): # TODO add jet break
+    def _caseNRFS(self, i1, i2):
+        return np.where(self._tobs < self._tNRFS, i1, i2)
+    
+    def Fnumaxrs(self):
         """"""
         ISMscale_caseI = self._tfrac**(self._alphaDict["Fnumaxrs"]["ISMcaseI"])
         ISMscale_caseII = self._tfrac**(self._alphaDict["Fnumaxrs"]["ISMcaseII"])
@@ -689,17 +700,38 @@ class RSjetStruct:
                                    (self._tobs/self._tjet)**(self._alphaDict["Fnumaxrs"]["windCaseIV"])
                 windScale_caseV = (self._tjet/self._tcross)**(self._alphaDict["Fnumaxrs"]["windCaseII"]) *\
                                   (self._tobs/self._tjet)**(self._alphaDict["Fnumaxrs"]["windCaseV"])
+                                  
+                ISMscale_caseVI = (self._tjet/self._tcross)**(self._alphaDict["Fnumaxrs"]["ISMcaseI"]) *\
+                                  (self._tNRFS/self._tjet)**(self._alphaDict["Fnumaxrs"]["ISMcaseIV"]) *\
+                                  (self._tobs/self._tNRFS)**(self._alphaDict["Fnumaxrs"]["ISMcaseVI"])                                      
+                ISMscale_caseVII = (self._tjet/self._tcross)**(self._alphaDict["Fnumaxrs"]["ISMcaseII"]) *\
+                                 (self._tNRFS/self._tjet)**(self._alphaDict["Fnumaxrs"]["ISMcaseV"]) *\
+                                 (self._tobs/self._tNRFS)**(self._alphaDict["Fnumaxrs"]["ISMcaseVII"]) 
+                                 
+                windScale_caseVI = (self._tjet/self._tcross)**(self._alphaDict["Fnumaxrs"]["windCaseI"]) *\
+                                   (self._tNRFS/self._tjet)**(self._alphaDict["Fnumaxrs"]["windCaseIV"]) *\
+                                   (self._tobs/self._tNRFS)**(self._alphaDict["Fnumaxrs"]["windCaseVI"]) 
+                windScale_caseVII = (self._tjet/self._tcross)**(self._alphaDict["Fnumaxrs"]["windCaseII"]) *\
+                                  (self._tNRFS/self._tjet)**(self._alphaDict["Fnumaxrs"]["windCaseV"]) *\
+                                  (self._tobs/self._tNRFS)**(self._alphaDict["Fnumaxrs"]["windCaseVII"]) 
+                                  
             except FloatingPointError:
                 ISMscale_caseIV = np.nan
                 ISMscale_caseV = np.nan
                 windScale_caseIV = np.nan
                 windScale_caseV = np.nan
                 
-        
+                ISMscale_caseVI = np.nan
+                ISMscale_caseVII = np.nan
+                windScale_caseVI = np.nan
+                windScale_caseVII = np.nan
+                
+    
         Fnumaxrs_preJet = self._cases(self._Fnumaxrs_tcross, ISMscale_caseI, ISMscale_caseII, ISMscale_caseIII, windScale_caseI, windScale_caseII, windScale_caseIII)
         Fnumaxrs_postJet = self._compute_casePostJet(self._Fnumaxrs_tcross, ISMscale_caseIV, ISMscale_caseV, windScale_caseIV, windScale_caseV)
+        Fnumaxrs_postNRFS = self._compute_casePostNRFS(self._Fnumaxrs_tcross, ISMscale_caseVI, ISMscale_caseVII, windScale_caseVI, windScale_caseVII)
         
-        return self._caseJet(Fnumaxrs_preJet, Fnumaxrs_postJet)
+        return self._caseNRFS(self._caseJet(Fnumaxrs_preJet, Fnumaxrs_postJet), Fnumaxrs_postNRFS)
         
     def numrs(self):
         """"""
@@ -780,11 +812,12 @@ class RSjetStruct:
     def _buildAlphaDict(self): # TODO general 3 for ISM case Ic and IIc
         """Case I is for k_Gamma <= 1 and case II is for k_Gamma > 1 both for 
         time between t_cross and t_jet. Case III is for time less than t_cross.
-        Case IV is for k_Gamma < 1 and case V is for k_Gamma >= 1 both for 
-        time greater than t_jet. Case a is nu_a < nu_m < nu_c, case b 
-        is nu_m < nu_a < nu_c, case c is nu_m < nu_c < nu_a, case d is
-        nu_a < nu_c < nu_m, case e is nu_c < n_a < nu_m, case f is 
-        nu_c < n_m < n_a.
+        Case IV is post jet break for k_Gamma <= 1 and case V is for k_Gamma > 1 both for 
+        time greater than t_jet. Case VI is post nonrelativistic forward shock 
+        for k_Gamma <= 1 and case VII is for k_Gamma > 1. Case a is 
+        nu_a < nu_m < nu_c, case b is nu_m < nu_a < nu_c, case c is 
+        nu_m < nu_c < nu_a, case d is nu_a < nu_c < nu_m, case e is 
+        nu_c < n_a < nu_m, case f is nu_c < n_m < n_a.
         
         Note : assumes keps < 2
         """
@@ -857,7 +890,12 @@ class RSjetStruct:
         d["Fnumaxrs"]["ISMcaseV"]   = d["Fnumaxrs"]["ISMcaseII"]  + self._Gamma3alphaDict["ISMcaseII"] * 2
         d["Fnumaxrs"]["windCaseIV"] = d["Fnumaxrs"]["windCaseI"]  + self._Gamma3alphaDict["windCaseI"] * 2
         d["Fnumaxrs"]["windCaseV"]  = d["Fnumaxrs"]["windCaseII"] + self._Gamma3alphaDict["windCaseII"] * 2
-            
+        
+        d["Fnumaxrs"]["ISMcaseVI"]  = d["Fnumaxrs"]["ISMcaseI"]   
+        d["Fnumaxrs"]["ISMcaseVII"] = d["Fnumaxrs"]["ISMcaseII"]  
+        d["Fnumaxrs"]["windCaseVI"] = d["Fnumaxrs"]["windCaseI"]  
+        d["Fnumaxrs"]["windCaseVII"]= d["Fnumaxrs"]["windCaseII"] 
+        
         return d
     
     @np.vectorize
