@@ -139,12 +139,17 @@ def _classify_branch_v(nuac, nusa, num, nuc):
     return branch
 
 
-def _obs_flux_max_v(Fnumax, nusa, num, nuc, p, branch):
+def _obs_flux_max_v(Fnumax, nusa, num, nuc, p, branch, specnum_forced=None):
     """Vectorised port of obsFluxMax. `branch` already encodes specnum per point.
 
-    When the caller passes an explicit specnum, branch is constant and the
-    matching branch's formula is evaluated unconditionally (mirrors the
-    upstream's `(specnum == N)` activation gate).
+    The upstream obsFluxMax uses an activation gate
+        `cond_N * (specnum is None) + (specnum == N)`
+    on each branch's formula. In auto (specnum=None) mode the gate selects
+    the matching branch; under a forced specnum the gate forces that branch's
+    formulas to fire regardless of break ordering. Spectrum 3 is special: it
+    has two sub-formulas (3a: num<=nuc, 3b: num>nuc) each gated independently.
+    Under forced specnum=3 both sub-formulas activate and the result is their
+    sum; under auto mode the two are mutually exclusive on num vs nuc.
     """
     F = np.zeros_like(Fnumax)
     is1 = branch == 1
@@ -154,14 +159,24 @@ def _obs_flux_max_v(Fnumax, nusa, num, nuc, p, branch):
     is5 = branch == 5
     F[is1] = Fnumax[is1]
     F[is2] = Fnumax[is2] * (nusa[is2] / num[is2])**(-(p - 1.0)/2.0)
-    is3a = is3 & (num <= nuc)
-    is3b = is3 & (num >  nuc)
-    F[is3a] = (Fnumax[is3a]
-               * (nuc[is3a] / num[is3a])**(-(p - 1.0)/2.0)
-               * (nusa[is3a] / nuc[is3a])**(-p/2.0))
-    F[is3b] = (Fnumax[is3b]
-               * (num[is3b] / nuc[is3b])**(-0.5)
-               * (nusa[is3b] / num[is3b])**(-p/2.0))
+    if specnum_forced == 3:
+        # Forced spec 3: the upstream gate `cond * 0 + 1` makes both sub-cases
+        # fire unconditionally, so the result is their sum.
+        F[is3] = (Fnumax[is3]
+                  * (nuc[is3] / num[is3])**(-(p - 1.0)/2.0)
+                  * (nusa[is3] / nuc[is3])**(-p/2.0)
+                + Fnumax[is3]
+                  * (num[is3] / nuc[is3])**(-0.5)
+                  * (nusa[is3] / num[is3])**(-p/2.0))
+    else:
+        is3a = is3 & (num <= nuc)
+        is3b = is3 & (num >  nuc)
+        F[is3a] = (Fnumax[is3a]
+                   * (nuc[is3a] / num[is3a])**(-(p - 1.0)/2.0)
+                   * (nusa[is3a] / nuc[is3a])**(-p/2.0))
+        F[is3b] = (Fnumax[is3b]
+                   * (num[is3b] / nuc[is3b])**(-0.5)
+                   * (nusa[is3b] / num[is3b])**(-p/2.0))
     F[is4] = Fnumax[is4] * (nusa[is4] / nuc[is4])**(-0.5)
     F[is5] = Fnumax[is5]
     return F
@@ -641,7 +656,8 @@ class RSjetStruct:
         else:
             branch = np.full(n, int(specnum), dtype=np.int8)
 
-        Fnu_true = _obs_flux_max_v(Fnumax, nuar, num, nucut, _p, branch)
+        Fnu_true = _obs_flux_max_v(Fnumax, nuar, num, nucut, _p, branch,
+                                   specnum_forced=specnum)
 
         out = np.zeros(n, dtype=float)
         for sn in (1, 2, 3, 4, 5):
