@@ -20,9 +20,14 @@ def where(trutharray, funca, funcb, args = [], argsa = None, argsb = None): # TO
         result = np.empty(trutharray.shape, dtype = float)
         falsearray = np.logical_not(trutharray)
         
-        result[trutharray] = funca(*[arg[trutharray] for arg in argsa])
-        result[falsearray] = funcb(*[arg[falsearray] for arg in argsb])
-        
+        # Only evaluate funca if there is at least one True value - Gemini
+        if np.any(trutharray):
+            result[trutharray] = funca(*[arg[trutharray] for arg in argsa])
+            
+        # Only evaluate funcb if there is at least one False value - Gemini
+        if np.any(falsearray):
+            result[falsearray] = funcb(*[arg[falsearray] for arg in argsb])
+            
         return result
     
     else:
