@@ -911,7 +911,7 @@ class RSjetStruct:
         else:
             try:
                 t = (nub2_tcross**(1/(alpha1 - alpha2))/nub1_tcross**(1/(alpha1 - alpha2))) * tcross # FIXME problems with overflow at early times
-            except (OverflowError, ZeroDivisionError):
+            except (OverflowError, ZeroDivisionError, FloatingPointError):
                 t = largeTime #np.nan #t = np.inf
             if postcross and t > tcross:
                 return t
@@ -958,7 +958,7 @@ class RSjetStruct:
             try:
                 #t = (nub2_tcross/nub1_tcross * tAtoB**(alpha1b - alpha1a) * tcross**(alpha1a - alpha2))**(1/(alpha1b - alpha2)) # FIXME finding incorrect crossing time for precross case a num=nucut
                 t = (nub2_tcross/nub1_tcross)**(1/(alpha1b - alpha2)) * tAtoB**((alpha1b - alpha1a)/(alpha1b - alpha2)) * tcross**((alpha1a - alpha2)/(alpha1b - alpha2))
-            except (OverflowError, ZeroDivisionError):
+            except (OverflowError, ZeroDivisionError, FloatingPointError):
                 t = largeTime #t = np.nan  #t = np.inf
             
             if postcross and t > tAtoB:
