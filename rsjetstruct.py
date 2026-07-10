@@ -480,19 +480,35 @@ class RSjetStruct:
     def _casesabc(self, observable, ISMscale_caseIa, ISMscale_caseIb, ISMscale_caseIc, ISMscale_caseIIa, ISMscale_caseIIb, ISMscale_caseIIc,\
                   windScale_caseIa, windScale_caseIb, windScale_caseIc, windScale_caseIIa, windScale_caseIIb, windScale_caseIIc):
         """"""
-        nuars_ISMcaseIa   = self._compute_caseA(observable, ISMscale_caseIa,   self._tnuarseqnumrsPostCrossISMcaseIa,   self._tnuarseqnucutrsPostCrossISMcaseIa,   "ISMcaseIa",   "ISMcaseIb",   "ISMcaseIc",   self._tnuarseqnumrsPreCrossISMcaseIIIa,  self._tnuarseqnucutrsPreCrossISMcaseIIIa,  "ISMcaseIIIa",  "ISMcaseIIIb",  "ISMcaseIIIc")
-        nuars_ISMcaseIb   = self._compute_caseB(observable, ISMscale_caseIb,   self._tnuarseqnumrsPostCrossISMcaseIb,   self._tnuarseqnucutrsPostCrossISMcaseIb,   "ISMcaseIa",   "ISMcaseIb",   "ISMcaseIc",   self._tnuarseqnumrsPreCrossISMcaseIIIb,  self._tnuarseqnucutrsPreCrossISMcaseIIIb,  "ISMcaseIIIa",  "ISMcaseIIIb",  "ISMcaseIIIc")
-        nuars_ISMcaseIc   = self._compute_caseC(observable, ISMscale_caseIc,   self._tnuarseqnumrsPostCrossISMcaseIc,   self._tnuarseqnucutrsPostCrossISMcaseIc,   "ISMcaseIa",   "ISMcaseIb",   "ISMcaseIc",   self._tnuarseqnumrsPreCrossISMcaseIIIc,  self._tnuarseqnucutrsPreCrossISMcaseIIIc,  "ISMcaseIIIa",  "ISMcaseIIIb",  "ISMcaseIIIc")
-        nuars_ISMcaseIIa  = self._compute_caseA(observable, ISMscale_caseIIa,  self._tnuarseqnumrsPostCrossISMcaseIIa,  self._tnuarseqnucutrsPostCrossISMcaseIIa,  "ISMcaseIIa",  "ISMcaseIIb",  "ISMcaseIIc",  self._tnuarseqnumrsPreCrossISMcaseIIIa,  self._tnuarseqnucutrsPreCrossISMcaseIIIa,  "ISMcaseIIIa",  "ISMcaseIIIb",  "ISMcaseIIIc")
-        nuars_ISMcaseIIb  = self._compute_caseB(observable, ISMscale_caseIIb,  self._tnuarseqnumrsPostCrossISMcaseIIb,  self._tnuarseqnucutrsPostCrossISMcaseIIb,  "ISMcaseIIa",  "ISMcaseIIb",  "ISMcaseIIc",  self._tnuarseqnumrsPreCrossISMcaseIIIb,  self._tnuarseqnucutrsPreCrossISMcaseIIIb,  "ISMcaseIIIa",  "ISMcaseIIIb",  "ISMcaseIIIc")
-        nuars_ISMcaseIIc  = self._compute_caseC(observable, ISMscale_caseIIc,  self._tnuarseqnumrsPostCrossISMcaseIIc,  self._tnuarseqnucutrsPostCrossISMcaseIIc,  "ISMcaseIIa",  "ISMcaseIIb",  "ISMcaseIIc",  self._tnuarseqnumrsPreCrossISMcaseIIIc,  self._tnuarseqnucutrsPreCrossISMcaseIIIc,  "ISMcaseIIIa",  "ISMcaseIIIb",  "ISMcaseIIIc")
-        
-        nuars_windCaseIa  = self._compute_caseA(observable, windScale_caseIa,  self._tnuarseqnumrsPostCrossWindCaseIa,  self._tnuarseqnucutrsPostCrossWindCaseIa,  "windCaseIa",  "windCaseIb",  "windCaseIc",  self._tnuarseqnumrsPreCrossWindCaseIIIa, self._tnuarseqnucutrsPreCrossWindCaseIIIa, "windCaseIIIa", "windCaseIIIb", "windCaseIIIc")
-        nuars_windCaseIb  = self._compute_caseB(observable, windScale_caseIb,  self._tnuarseqnumrsPostCrossWindCaseIb,  self._tnuarseqnucutrsPostCrossWindCaseIb,  "windCaseIa",  "windCaseIb",  "windCaseIc",  self._tnuarseqnumrsPreCrossWindCaseIIIb, self._tnuarseqnucutrsPreCrossWindCaseIIIb, "windCaseIIIa", "windCaseIIIb", "windCaseIIIc")
-        nuars_windCaseIc  = self._compute_caseC(observable, windScale_caseIc,  self._tnuarseqnumrsPostCrossWindCaseIc,  self._tnuarseqnucutrsPostCrossWindCaseIc,  "windCaseIa",  "windCaseIb",  "windCaseIc",  self._tnuarseqnumrsPreCrossWindCaseIIIc, self._tnuarseqnucutrsPreCrossWindCaseIIIc, "windCaseIIIa", "windCaseIIIb", "windCaseIIIc")
-        nuars_windCaseIIa = self._compute_caseA(observable, windScale_caseIIa, self._tnuarseqnumrsPostCrossWindCaseIIa, self._tnuarseqnucutrsPostCrossWindCaseIIa, "windCaseIIa", "windCaseIIb", "windCaseIIc", self._tnuarseqnumrsPreCrossWindCaseIIIa, self._tnuarseqnucutrsPreCrossWindCaseIIIa, "windCaseIIIa", "windCaseIIIb", "windCaseIIIc")
-        nuars_windCaseIIb = self._compute_caseB(observable, windScale_caseIIb, self._tnuarseqnumrsPostCrossWindCaseIIb, self._tnuarseqnucutrsPostCrossWindCaseIIb, "windCaseIIa", "windCaseIIb", "windCaseIIc", self._tnuarseqnumrsPreCrossWindCaseIIIb, self._tnuarseqnucutrsPreCrossWindCaseIIIb, "windCaseIIIa", "windCaseIIIb", "windCaseIIIc")
-        nuars_windCaseIIc = self._compute_caseC(observable, windScale_caseIIc, self._tnuarseqnumrsPostCrossWindCaseIIc, self._tnuarseqnucutrsPostCrossWindCaseIIc, "windCaseIIa", "windCaseIIb", "windCaseIIc", self._tnuarseqnumrsPreCrossWindCaseIIIc, self._tnuarseqnucutrsPreCrossWindCaseIIIc, "windCaseIIIa", "windCaseIIIb", "windCaseIIIc")
+        if self._ISM:
+            nuars_ISMcaseIa   = self._compute_caseA(observable, ISMscale_caseIa,   self._tnuarseqnumrsPostCrossISMcaseIa,   self._tnuarseqnucutrsPostCrossISMcaseIa,   "ISMcaseIa",   "ISMcaseIb",   "ISMcaseIc",   self._tnuarseqnumrsPreCrossISMcaseIIIa,  self._tnuarseqnucutrsPreCrossISMcaseIIIa,  "ISMcaseIIIa",  "ISMcaseIIIb",  "ISMcaseIIIc")
+            nuars_ISMcaseIb   = self._compute_caseB(observable, ISMscale_caseIb,   self._tnuarseqnumrsPostCrossISMcaseIb,   self._tnuarseqnucutrsPostCrossISMcaseIb,   "ISMcaseIa",   "ISMcaseIb",   "ISMcaseIc",   self._tnuarseqnumrsPreCrossISMcaseIIIb,  self._tnuarseqnucutrsPreCrossISMcaseIIIb,  "ISMcaseIIIa",  "ISMcaseIIIb",  "ISMcaseIIIc")
+            nuars_ISMcaseIc   = self._compute_caseC(observable, ISMscale_caseIc,   self._tnuarseqnumrsPostCrossISMcaseIc,   self._tnuarseqnucutrsPostCrossISMcaseIc,   "ISMcaseIa",   "ISMcaseIb",   "ISMcaseIc",   self._tnuarseqnumrsPreCrossISMcaseIIIc,  self._tnuarseqnucutrsPreCrossISMcaseIIIc,  "ISMcaseIIIa",  "ISMcaseIIIb",  "ISMcaseIIIc")
+            nuars_ISMcaseIIa  = self._compute_caseA(observable, ISMscale_caseIIa,  self._tnuarseqnumrsPostCrossISMcaseIIa,  self._tnuarseqnucutrsPostCrossISMcaseIIa,  "ISMcaseIIa",  "ISMcaseIIb",  "ISMcaseIIc",  self._tnuarseqnumrsPreCrossISMcaseIIIa,  self._tnuarseqnucutrsPreCrossISMcaseIIIa,  "ISMcaseIIIa",  "ISMcaseIIIb",  "ISMcaseIIIc")
+            nuars_ISMcaseIIb  = self._compute_caseB(observable, ISMscale_caseIIb,  self._tnuarseqnumrsPostCrossISMcaseIIb,  self._tnuarseqnucutrsPostCrossISMcaseIIb,  "ISMcaseIIa",  "ISMcaseIIb",  "ISMcaseIIc",  self._tnuarseqnumrsPreCrossISMcaseIIIb,  self._tnuarseqnucutrsPreCrossISMcaseIIIb,  "ISMcaseIIIa",  "ISMcaseIIIb",  "ISMcaseIIIc")
+            nuars_ISMcaseIIc  = self._compute_caseC(observable, ISMscale_caseIIc,  self._tnuarseqnumrsPostCrossISMcaseIIc,  self._tnuarseqnucutrsPostCrossISMcaseIIc,  "ISMcaseIIa",  "ISMcaseIIb",  "ISMcaseIIc",  self._tnuarseqnumrsPreCrossISMcaseIIIc,  self._tnuarseqnucutrsPreCrossISMcaseIIIc,  "ISMcaseIIIa",  "ISMcaseIIIb",  "ISMcaseIIIc")
+        else:
+            nuars_ISMcaseIa   = np.full_like(self._tobs, smallNum)
+            nuars_ISMcaseIb   = np.full_like(self._tobs, smallNum)
+            nuars_ISMcaseIc   = np.full_like(self._tobs, smallNum)
+            nuars_ISMcaseIIa  = np.full_like(self._tobs, smallNum)
+            nuars_ISMcaseIIb  = np.full_like(self._tobs, smallNum)
+            nuars_ISMcaseIIc  = np.full_like(self._tobs, smallNum)
+
+        if not(self._ISM):
+            nuars_windCaseIa  = self._compute_caseA(observable, windScale_caseIa,  self._tnuarseqnumrsPostCrossWindCaseIa,  self._tnuarseqnucutrsPostCrossWindCaseIa,  "windCaseIa",  "windCaseIb",  "windCaseIc",  self._tnuarseqnumrsPreCrossWindCaseIIIa, self._tnuarseqnucutrsPreCrossWindCaseIIIa, "windCaseIIIa", "windCaseIIIb", "windCaseIIIc")
+            nuars_windCaseIb  = self._compute_caseB(observable, windScale_caseIb,  self._tnuarseqnumrsPostCrossWindCaseIb,  self._tnuarseqnucutrsPostCrossWindCaseIb,  "windCaseIa",  "windCaseIb",  "windCaseIc",  self._tnuarseqnumrsPreCrossWindCaseIIIb, self._tnuarseqnucutrsPreCrossWindCaseIIIb, "windCaseIIIa", "windCaseIIIb", "windCaseIIIc")
+            nuars_windCaseIc  = self._compute_caseC(observable, windScale_caseIc,  self._tnuarseqnumrsPostCrossWindCaseIc,  self._tnuarseqnucutrsPostCrossWindCaseIc,  "windCaseIa",  "windCaseIb",  "windCaseIc",  self._tnuarseqnumrsPreCrossWindCaseIIIc, self._tnuarseqnucutrsPreCrossWindCaseIIIc, "windCaseIIIa", "windCaseIIIb", "windCaseIIIc")
+            nuars_windCaseIIa = self._compute_caseA(observable, windScale_caseIIa, self._tnuarseqnumrsPostCrossWindCaseIIa, self._tnuarseqnucutrsPostCrossWindCaseIIa, "windCaseIIa", "windCaseIIb", "windCaseIIc", self._tnuarseqnumrsPreCrossWindCaseIIIa, self._tnuarseqnucutrsPreCrossWindCaseIIIa, "windCaseIIIa", "windCaseIIIb", "windCaseIIIc")
+            nuars_windCaseIIb = self._compute_caseB(observable, windScale_caseIIb, self._tnuarseqnumrsPostCrossWindCaseIIb, self._tnuarseqnucutrsPostCrossWindCaseIIb, "windCaseIIa", "windCaseIIb", "windCaseIIc", self._tnuarseqnumrsPreCrossWindCaseIIIb, self._tnuarseqnucutrsPreCrossWindCaseIIIb, "windCaseIIIa", "windCaseIIIb", "windCaseIIIc")
+            nuars_windCaseIIc = self._compute_caseC(observable, windScale_caseIIc, self._tnuarseqnumrsPostCrossWindCaseIIc, self._tnuarseqnucutrsPostCrossWindCaseIIc, "windCaseIIa", "windCaseIIb", "windCaseIIc", self._tnuarseqnumrsPreCrossWindCaseIIIc, self._tnuarseqnucutrsPreCrossWindCaseIIIc, "windCaseIIIa", "windCaseIIIb", "windCaseIIIc")
+        else:
+            nuars_windCaseIa  = np.full_like(self._tobs, smallNum)
+            nuars_windCaseIb  = np.full_like(self._tobs, smallNum)
+            nuars_windCaseIc  = np.full_like(self._tobs, smallNum)
+            nuars_windCaseIIa = np.full_like(self._tobs, smallNum)
+            nuars_windCaseIIb = np.full_like(self._tobs, smallNum)
+            nuars_windCaseIIc = np.full_like(self._tobs, smallNum)
         
         return self._caseISMorWind(self._caseIorII(self._caseAorBorC(nuars_ISMcaseIa,\
                                                                      nuars_ISMcaseIb,\
@@ -509,7 +525,10 @@ class RSjetStruct:
     
     def _caseISMorWind(self, i1, i2):
         """"""
-        return np.where(self._ISM, i1, i2)
+        if self._ISM:
+            return i1
+        else:
+            return i2
     
     def _casePreOrPost(self, i1, i2):
         """"""
@@ -681,41 +700,64 @@ class RSjetStruct:
     
     def Fnumaxrs(self):
         """"""
-        ISMscale_caseI = self._tfrac**(self._alphaDict["Fnumaxrs"]["ISMcaseI"])
-        ISMscale_caseII = self._tfrac**(self._alphaDict["Fnumaxrs"]["ISMcaseII"])
-        ISMscale_caseIII = self._tfrac**(self._alphaDict["Fnumaxrs"]["ISMcaseIII"])
-        
-        windScale_caseI = self._tfrac**(self._alphaDict["Fnumaxrs"]["windCaseI"])
-        windScale_caseII = self._tfrac**(self._alphaDict["Fnumaxrs"]["windCaseII"])
-        windScale_caseIII = self._tfrac**(self._alphaDict["Fnumaxrs"]["windCaseIII"])
+        if self._ISM:
+            ISMscale_caseI = self._tfrac**(self._alphaDict["Fnumaxrs"]["ISMcaseI"])
+            ISMscale_caseII = self._tfrac**(self._alphaDict["Fnumaxrs"]["ISMcaseII"])
+            ISMscale_caseIII = self._tfrac**(self._alphaDict["Fnumaxrs"]["ISMcaseIII"])
+        else:
+            ISMscale_caseI = np.full_like(self._tobs, smallNum)
+            ISMscale_caseII = np.full_like(self._tobs, smallNum)
+            ISMscale_caseIII = np.full_like(self._tobs, smallNum)
+            
+        if not(self._ISM):
+            windScale_caseI = self._tfrac**(self._alphaDict["Fnumaxrs"]["windCaseI"])
+            windScale_caseII = self._tfrac**(self._alphaDict["Fnumaxrs"]["windCaseII"])
+            windScale_caseIII = self._tfrac**(self._alphaDict["Fnumaxrs"]["windCaseIII"])
+        else:
+            windScale_caseI = np.full_like(self._tobs, smallNum)
+            windScale_caseII = np.full_like(self._tobs, smallNum)
+            windScale_caseIII = np.full_like(self._tobs, smallNum)
+            
         
         with np.errstate(divide = "raise"):
             try:
-                ISMscale_caseIV = (self._tjet/self._tcross)**(self._alphaDict["Fnumaxrs"]["ISMcaseI"]) *\
-                                  (self._tobs/self._tjet)**(self._alphaDict["Fnumaxrs"]["ISMcaseIV"])
-                ISMscale_caseV = (self._tjet/self._tcross)**(self._alphaDict["Fnumaxrs"]["ISMcaseII"]) *\
-                                 (self._tobs/self._tjet)**(self._alphaDict["Fnumaxrs"]["ISMcaseV"])
-                                 
-                windScale_caseIV = (self._tjet/self._tcross)**(self._alphaDict["Fnumaxrs"]["windCaseI"]) *\
-                                   (self._tobs/self._tjet)**(self._alphaDict["Fnumaxrs"]["windCaseIV"])
-                windScale_caseV = (self._tjet/self._tcross)**(self._alphaDict["Fnumaxrs"]["windCaseII"]) *\
-                                  (self._tobs/self._tjet)**(self._alphaDict["Fnumaxrs"]["windCaseV"])
+                if self._ISM:
+                    ISMscale_caseIV = (self._tjet/self._tcross)**(self._alphaDict["Fnumaxrs"]["ISMcaseI"]) *\
+                                      (self._tobs/self._tjet)**(self._alphaDict["Fnumaxrs"]["ISMcaseIV"])
+                    ISMscale_caseV = (self._tjet/self._tcross)**(self._alphaDict["Fnumaxrs"]["ISMcaseII"]) *\
+                                     (self._tobs/self._tjet)**(self._alphaDict["Fnumaxrs"]["ISMcaseV"])
+                                      
+                    ISMscale_caseVI = (self._tjet/self._tcross)**(self._alphaDict["Fnumaxrs"]["ISMcaseI"]) *\
+                                      (self._tNRFS/self._tjet)**(self._alphaDict["Fnumaxrs"]["ISMcaseIV"]) *\
+                                      (self._tobs/self._tNRFS)**(self._alphaDict["Fnumaxrs"]["ISMcaseVI"])                                      
+                    ISMscale_caseVII = (self._tjet/self._tcross)**(self._alphaDict["Fnumaxrs"]["ISMcaseII"]) *\
+                                     (self._tNRFS/self._tjet)**(self._alphaDict["Fnumaxrs"]["ISMcaseV"]) *\
+                                     (self._tobs/self._tNRFS)**(self._alphaDict["Fnumaxrs"]["ISMcaseVII"])
+                else:
+                    ISMscale_caseIV = np.full_like(self._tobs, smallNum)
+                    ISMscale_caseV = np.full_like(self._tobs, smallNum)
+                    ISMscale_caseVI = np.full_like(self._tobs, smallNum)                 
+                    ISMscale_caseVII = np.full_like(self._tobs, smallNum)
+                    
+                if not(self._ISM):
+                    windScale_caseIV = (self._tjet/self._tcross)**(self._alphaDict["Fnumaxrs"]["windCaseI"]) *\
+                                       (self._tobs/self._tjet)**(self._alphaDict["Fnumaxrs"]["windCaseIV"])
+                    windScale_caseV = (self._tjet/self._tcross)**(self._alphaDict["Fnumaxrs"]["windCaseII"]) *\
+                                      (self._tobs/self._tjet)**(self._alphaDict["Fnumaxrs"]["windCaseV"])
+                    
+                    windScale_caseVI = (self._tjet/self._tcross)**(self._alphaDict["Fnumaxrs"]["windCaseI"]) *\
+                                       (self._tNRFS/self._tjet)**(self._alphaDict["Fnumaxrs"]["windCaseIV"]) *\
+                                       (self._tobs/self._tNRFS)**(self._alphaDict["Fnumaxrs"]["windCaseVI"]) 
+                    windScale_caseVII = (self._tjet/self._tcross)**(self._alphaDict["Fnumaxrs"]["windCaseII"]) *\
+                                      (self._tNRFS/self._tjet)**(self._alphaDict["Fnumaxrs"]["windCaseV"]) *\
+                                      (self._tobs/self._tNRFS)**(self._alphaDict["Fnumaxrs"]["windCaseVII"]) 
+                else:
+                    windScale_caseIV = np.full_like(self._tobs, smallNum)
+                    windScale_caseV = np.full_like(self._tobs, smallNum)
+                    windScale_caseVI = np.full_like(self._tobs, smallNum)
+                    windScale_caseVII = np.full_like(self._tobs, smallNum)
                                   
-                ISMscale_caseVI = (self._tjet/self._tcross)**(self._alphaDict["Fnumaxrs"]["ISMcaseI"]) *\
-                                  (self._tNRFS/self._tjet)**(self._alphaDict["Fnumaxrs"]["ISMcaseIV"]) *\
-                                  (self._tobs/self._tNRFS)**(self._alphaDict["Fnumaxrs"]["ISMcaseVI"])                                      
-                ISMscale_caseVII = (self._tjet/self._tcross)**(self._alphaDict["Fnumaxrs"]["ISMcaseII"]) *\
-                                 (self._tNRFS/self._tjet)**(self._alphaDict["Fnumaxrs"]["ISMcaseV"]) *\
-                                 (self._tobs/self._tNRFS)**(self._alphaDict["Fnumaxrs"]["ISMcaseVII"]) 
-                                 
-                windScale_caseVI = (self._tjet/self._tcross)**(self._alphaDict["Fnumaxrs"]["windCaseI"]) *\
-                                   (self._tNRFS/self._tjet)**(self._alphaDict["Fnumaxrs"]["windCaseIV"]) *\
-                                   (self._tobs/self._tNRFS)**(self._alphaDict["Fnumaxrs"]["windCaseVI"]) 
-                windScale_caseVII = (self._tjet/self._tcross)**(self._alphaDict["Fnumaxrs"]["windCaseII"]) *\
-                                  (self._tNRFS/self._tjet)**(self._alphaDict["Fnumaxrs"]["windCaseV"]) *\
-                                  (self._tobs/self._tNRFS)**(self._alphaDict["Fnumaxrs"]["windCaseVII"]) 
-                                  
-            except FloatingPointError:
+            except (OverflowError, ZeroDivisionError, FloatingPointError):
                 ISMscale_caseIV = np.nan
                 ISMscale_caseV = np.nan
                 windScale_caseIV = np.nan
@@ -735,43 +777,81 @@ class RSjetStruct:
         
     def numrs(self):
         """"""
-        ISMscale_caseI = self._tfrac**(self._alphaDict["numrs"]["ISMcaseI"])
-        ISMscale_caseII = self._tfrac**(self._alphaDict["numrs"]["ISMcaseII"])
-        ISMscale_caseIII = self._tfrac**(self._alphaDict["numrs"]["ISMcaseIII"])
-        
-        windScale_caseI = self._tfrac**(self._alphaDict["numrs"]["windCaseI"])
-        windScale_caseII = self._tfrac**(self._alphaDict["numrs"]["windCaseII"])
-        windScale_caseIII = self._tfrac**(self._alphaDict["numrs"]["windCaseIII"])
+        if self._ISM:
+            ISMscale_caseI = self._tfrac**(self._alphaDict["numrs"]["ISMcaseI"])
+            ISMscale_caseII = self._tfrac**(self._alphaDict["numrs"]["ISMcaseII"])
+            ISMscale_caseIII = self._tfrac**(self._alphaDict["numrs"]["ISMcaseIII"])
+        else:
+            ISMscale_caseI = np.full_like(self._tobs, smallNum)
+            ISMscale_caseII = np.full_like(self._tobs, smallNum)
+            ISMscale_caseIII = np.full_like(self._tobs, smallNum)
+
+        if not(self._ISM):
+            windScale_caseI = self._tfrac**(self._alphaDict["numrs"]["windCaseI"])
+            windScale_caseII = self._tfrac**(self._alphaDict["numrs"]["windCaseII"])
+            windScale_caseIII = self._tfrac**(self._alphaDict["numrs"]["windCaseIII"])
+        else:
+            windScale_caseI = np.full_like(self._tobs, smallNum)
+            windScale_caseII = np.full_like(self._tobs, smallNum)
+            windScale_caseIII = np.full_like(self._tobs, smallNum)
+            
         
         return self._cases(self._numrs_tcross, ISMscale_caseI, ISMscale_caseII, ISMscale_caseIII, windScale_caseI, windScale_caseII, windScale_caseIII)
         
     def nucutrs(self):
         """"""
-        ISMscale_caseI = self._tfrac**(self._alphaDict["nucutrs"]["ISMcaseI"])
-        ISMscale_caseII = self._tfrac**(self._alphaDict["nucutrs"]["ISMcaseII"])
-        ISMscale_caseIII = self._tfrac**(self._alphaDict["nucutrs"]["ISMcaseIII"])
-        
-        windScale_caseI = self._tfrac**(self._alphaDict["nucutrs"]["windCaseI"])
-        windScale_caseII = self._tfrac**(self._alphaDict["nucutrs"]["windCaseII"])
-        windScale_caseIII = self._tfrac**(self._alphaDict["nucutrs"]["windCaseIII"])
+    
+        if self._ISM:
+            ISMscale_caseI = self._tfrac**(self._alphaDict["nucutrs"]["ISMcaseI"])
+            ISMscale_caseII = self._tfrac**(self._alphaDict["nucutrs"]["ISMcaseII"])
+            ISMscale_caseIII = self._tfrac**(self._alphaDict["nucutrs"]["ISMcaseIII"])
+        else:
+            ISMscale_caseI = np.full_like(self._tobs, smallNum)
+            ISMscale_caseII = np.full_like(self._tobs, smallNum)
+            ISMscale_caseIII = np.full_like(self._tobs, smallNum)
+
+        if not(self._ISM):
+            windScale_caseI = self._tfrac**(self._alphaDict["nucutrs"]["windCaseI"])
+            windScale_caseII = self._tfrac**(self._alphaDict["nucutrs"]["windCaseII"])
+            windScale_caseIII = self._tfrac**(self._alphaDict["nucutrs"]["windCaseIII"])
+        else:
+            windScale_caseI = np.full_like(self._tobs, smallNum)
+            windScale_caseII = np.full_like(self._tobs, smallNum)
+            windScale_caseIII = np.full_like(self._tobs, smallNum)
         
         return self._cases(self._nucutrs_tcross, ISMscale_caseI, ISMscale_caseII, ISMscale_caseIII, windScale_caseI, windScale_caseII, windScale_caseIII)
         
     def nuars(self):
         """"""
-        ISMscale_caseIa = self._tfrac**(self._alphaDict["nuars"]["ISMcaseIa"])
-        ISMscale_caseIb = self._tfrac**(self._alphaDict["nuars"]["ISMcaseIb"])
-        ISMscale_caseIc = self._tfrac**(self._alphaDict["nuars"]["ISMcaseIc"])
-        ISMscale_caseIIa = self._tfrac**(self._alphaDict["nuars"]["ISMcaseIIa"])
-        ISMscale_caseIIb = self._tfrac**(self._alphaDict["nuars"]["ISMcaseIIb"])
-        ISMscale_caseIIc = self._tfrac**(self._alphaDict["nuars"]["ISMcaseIIc"])
-        
-        windScale_caseIa = self._tfrac**(self._alphaDict["nuars"]["windCaseIa"])
-        windScale_caseIb = self._tfrac**(self._alphaDict["nuars"]["windCaseIb"])
-        windScale_caseIc = self._tfrac**(self._alphaDict["nuars"]["windCaseIc"])
-        windScale_caseIIa = self._tfrac**(self._alphaDict["nuars"]["windCaseIIa"])
-        windScale_caseIIb = self._tfrac**(self._alphaDict["nuars"]["windCaseIIb"])
-        windScale_caseIIc = self._tfrac**(self._alphaDict["nuars"]["windCaseIIc"])
+        if self._ISM:
+            ISMscale_caseIa = self._tfrac**(self._alphaDict["nuars"]["ISMcaseIa"])
+            ISMscale_caseIb = self._tfrac**(self._alphaDict["nuars"]["ISMcaseIb"])
+            ISMscale_caseIc = self._tfrac**(self._alphaDict["nuars"]["ISMcaseIc"])
+            ISMscale_caseIIa = self._tfrac**(self._alphaDict["nuars"]["ISMcaseIIa"])
+            ISMscale_caseIIb = self._tfrac**(self._alphaDict["nuars"]["ISMcaseIIb"])
+            ISMscale_caseIIc = self._tfrac**(self._alphaDict["nuars"]["ISMcaseIIc"])
+        else:
+            ISMscale_caseIa = np.full_like(self._tobs, smallNum)
+            ISMscale_caseIb = np.full_like(self._tobs, smallNum)
+            ISMscale_caseIc = np.full_like(self._tobs, smallNum)
+            ISMscale_caseIIa = np.full_like(self._tobs, smallNum)
+            ISMscale_caseIIb = np.full_like(self._tobs, smallNum)
+            ISMscale_caseIIc = np.full_like(self._tobs, smallNum)
+
+        if not(self._ISM):
+            windScale_caseIa = self._tfrac**(self._alphaDict["nuars"]["windCaseIa"])
+            windScale_caseIb = self._tfrac**(self._alphaDict["nuars"]["windCaseIb"])
+            windScale_caseIc = self._tfrac**(self._alphaDict["nuars"]["windCaseIc"])
+            windScale_caseIIa = self._tfrac**(self._alphaDict["nuars"]["windCaseIIa"])
+            windScale_caseIIb = self._tfrac**(self._alphaDict["nuars"]["windCaseIIb"])
+            windScale_caseIIc = self._tfrac**(self._alphaDict["nuars"]["windCaseIIc"])
+        else:
+            windScale_caseIa = np.full_like(self._tobs, smallNum)
+            windScale_caseIb = np.full_like(self._tobs, smallNum)
+            windScale_caseIc = np.full_like(self._tobs, smallNum)
+            windScale_caseIIa = np.full_like(self._tobs, smallNum)
+            windScale_caseIIb = np.full_like(self._tobs, smallNum)
+            windScale_caseIIc = np.full_like(self._tobs, smallNum)
         
         return self._casesabc(self._nuars_tcross, ISMscale_caseIa, ISMscale_caseIb, ISMscale_caseIc, ISMscale_caseIIa, ISMscale_caseIIb, ISMscale_caseIIc,\
                               windScale_caseIa, windScale_caseIb, windScale_caseIc, windScale_caseIIa, windScale_caseIIb, windScale_caseIIc)
