@@ -295,7 +295,7 @@ class RSjetStruct:
             
             else: # TODO implement spectrum 4, 5, 6
                 warnings.warn("fast cooling cases unimplemented")
-                return np.full_like(self._nu, -1)
+                return np.full_like(self._nu, smallNum)
         
         else: # wind
             if (self._nuars_tcross < self._numrs_tcross < self._nucutrs_tcross):
@@ -396,7 +396,7 @@ class RSjetStruct:
                 
             else: # TODO implement spectrum 4, 5, 6
                 warnings.warn("fast cooling cases unimplemented")
-                return np.full_like(self._nu, -1)
+                return np.full_like(self._nu, smallNum)
         
         return spect
             
