@@ -7,6 +7,8 @@ Created on Thu May 29 12:47:35 2025
 
 import numpy as np
 
+overflowMaxRatio = 1e2
+
 class Spectrum:
     """Generates a spectrum given break frequency and peak according to the
     prescription in Granot and Sari 2002 (GS02).
@@ -107,7 +109,7 @@ class Spectrum:
     def _tildeFnuCUT12(self, nu):
         """Cutoff for spectra 1 and 2"""
         
-        mask = nu/self._nub(3) < 7e2 # mask for overflow
+        mask = nu/self._nub(3) < overflowMaxRatio # mask for overflow
         
         if isinstance(nu, np.ndarray):
             tildeFnu3 = Spectrum._tildeFnub(nu[mask], self._nub(3), *self._getSlope(3))
@@ -135,7 +137,7 @@ class Spectrum:
         
     def _FnuCUT3(self, nu, Fnu4): # TODO make sure order of nu can't matter
         """Cutoff for spectra 3"""
-        mask = nu/self._nub(3) < 7e2 # mask for overflow
+        mask = nu/self._nub(3) < overflowMaxRatio # mask for overflow
         
         if isinstance(nu, np.ndarray):
             precut = Spectrum._Fnu4(nu[mask], self._nub(4), Fnu4, *self._getSlope(4)) * Spectrum._tildeFnub(nu[mask], self._nub(6), *self._getSlope(6))
@@ -163,7 +165,7 @@ class Spectrum:
     
     def _FnuCUT4(self, nu, Fnu7):
         """Cutoff for spectra 4"""
-        mask = nu/self._nub(3) < 7e2 # mask for overflow
+        mask = nu/self._nub(3) < overflowMaxRatio # mask for overflow
         
         if isinstance(nu, np.ndarray):
             precut = Spectrum._Fnub(nu[mask], self._nub(7), Fnu7, *self._getSlope(7)) *\
@@ -199,7 +201,7 @@ class Spectrum:
     
     def _tildeFnuCUT5(self, nu):
         """Cutoff for spectra 5"""
-        mask = nu/self._nub(3) < 7e2 # mask for overflow
+        mask = nu/self._nub(3) < overflowMaxRatio # mask for overflow
         
         if isinstance(nu, np.ndarray):
             tildeFnu11 = Spectrum._tildeFnub(nu[mask], self._nub(11), *self._getSlope(11))

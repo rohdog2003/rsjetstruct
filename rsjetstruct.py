@@ -11,7 +11,7 @@ import warnings
 from .utilities import where # TODO implement this as needed
 
 smallNum = 1e-50 # a very small number close to zero
-largeTime = 1000000
+largeTime = 1e7 # 1000000
 
 def obsFluxMax(Fnumax_nossa, nuac, nusa, num, nuc, p, specnum = None): # TODO add by specnum?
     """computes the observed maximum flux from the theoretical maximum if no
@@ -120,55 +120,121 @@ class RSjetStruct:
         self._alphaDict = self._buildAlphaDict()
         # post crossing time equalities for nuars and numrs slow cooling 
         # TODO add case c
-        self._tnuarseqnumrsPostCrossISMcaseIa     =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._numrs_tcross,     self._alphaDict["nuars"]["ISMcaseIa"],    self._alphaDict["numrs"]["ISMcaseI"],      postcross = True)
-        self._tnuarseqnumrsPostCrossISMcaseIb     =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._numrs_tcross,     self._alphaDict["nuars"]["ISMcaseIb"],    self._alphaDict["numrs"]["ISMcaseI"],      postcross = True)
-        self._tnuarseqnumrsPostCrossISMcaseIIa    =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._numrs_tcross,     self._alphaDict["nuars"]["ISMcaseIIa"],   self._alphaDict["numrs"]["ISMcaseII"],     postcross = True)
-        self._tnuarseqnumrsPostCrossISMcaseIIb    =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._numrs_tcross,     self._alphaDict["nuars"]["ISMcaseIIb"],   self._alphaDict["numrs"]["ISMcaseII"],     postcross = True)
-        self._tnuarseqnumrsPostCrossWindCaseIa    =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._numrs_tcross,     self._alphaDict["nuars"]["windCaseIa"],   self._alphaDict["numrs"]["windCaseI"],     postcross = True)
-        self._tnuarseqnumrsPostCrossWindCaseIb    =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._numrs_tcross,     self._alphaDict["nuars"]["windCaseIb"],   self._alphaDict["numrs"]["windCaseI"],     postcross = True)
-        self._tnuarseqnumrsPostCrossWindCaseIIa   =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._numrs_tcross,     self._alphaDict["nuars"]["windCaseIIa"],  self._alphaDict["numrs"]["windCaseII"],    postcross = True)
-        self._tnuarseqnumrsPostCrossWindCaseIIb   =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._numrs_tcross,     self._alphaDict["nuars"]["windCaseIIb"],  self._alphaDict["numrs"]["windCaseII"],    postcross = True)
+        if self._ISM:
+            self._tnuarseqnumrsPostCrossISMcaseIa     =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._numrs_tcross,     self._alphaDict["nuars"]["ISMcaseIa"],    self._alphaDict["numrs"]["ISMcaseI"],      postcross = True)
+            self._tnuarseqnumrsPostCrossISMcaseIb     =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._numrs_tcross,     self._alphaDict["nuars"]["ISMcaseIb"],    self._alphaDict["numrs"]["ISMcaseI"],      postcross = True)
+            self._tnuarseqnumrsPostCrossISMcaseIIa    =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._numrs_tcross,     self._alphaDict["nuars"]["ISMcaseIIa"],   self._alphaDict["numrs"]["ISMcaseII"],     postcross = True)
+            self._tnuarseqnumrsPostCrossISMcaseIIb    =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._numrs_tcross,     self._alphaDict["nuars"]["ISMcaseIIb"],   self._alphaDict["numrs"]["ISMcaseII"],     postcross = True)
+        else:
+            self._tnuarseqnumrsPostCrossISMcaseIa     =       np.nan
+            self._tnuarseqnumrsPostCrossISMcaseIb     =       np.nan
+            self._tnuarseqnumrsPostCrossISMcaseIIa    =       np.nan
+            self._tnuarseqnumrsPostCrossISMcaseIIb    =       np.nan
+            
+        if not(self._ISM):
+            self._tnuarseqnumrsPostCrossWindCaseIa    =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._numrs_tcross,     self._alphaDict["nuars"]["windCaseIa"],   self._alphaDict["numrs"]["windCaseI"],     postcross = True)
+            self._tnuarseqnumrsPostCrossWindCaseIb    =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._numrs_tcross,     self._alphaDict["nuars"]["windCaseIb"],   self._alphaDict["numrs"]["windCaseI"],     postcross = True)
+            self._tnuarseqnumrsPostCrossWindCaseIIa   =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._numrs_tcross,     self._alphaDict["nuars"]["windCaseIIa"],  self._alphaDict["numrs"]["windCaseII"],    postcross = True)
+            self._tnuarseqnumrsPostCrossWindCaseIIb   =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._numrs_tcross,     self._alphaDict["nuars"]["windCaseIIb"],  self._alphaDict["numrs"]["windCaseII"],    postcross = True)
+        else:
+            self._tnuarseqnumrsPostCrossWindCaseIa    =       np.nan
+            self._tnuarseqnumrsPostCrossWindCaseIb    =       np.nan
+            self._tnuarseqnumrsPostCrossWindCaseIIa   =       np.nan
+            self._tnuarseqnumrsPostCrossWindCaseIIb   =       np.nan
+            
+            
         # post crossing time equalities for nuars and nucutrs slow cooling
-        self._tnuarseqnucutrsPostCrossISMcaseIa   = RSjetStruct._tnub1eqnub2double(self._tcross, self._nuars_tcross, self._nucutrs_tcross,   self._alphaDict["nuars"]["ISMcaseIa"],\
-                                                                                                 self._tnuarseqnumrsPostCrossISMcaseIa,      self._alphaDict["nuars"]["ISMcaseIb"],    self._alphaDict["nucutrs"]["ISMcaseI"],    postcross = True)
-        self._tnuarseqnucutrsPostCrossISMcaseIb   =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._nucutrs_tcross,   self._alphaDict["nuars"]["ISMcaseIb"],    self._alphaDict["nucutrs"]["ISMcaseI"],    postcross = True)
-        self._tnuarseqnucutrsPostCrossISMcaseIc   =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._nucutrs_tcross,   self._alphaDict["nuars"]["ISMcaseIc"],    self._alphaDict["nucutrs"]["ISMcaseI"],    postcross = True)
-        self._tnuarseqnucutrsPostCrossISMcaseIIa  = RSjetStruct._tnub1eqnub2double(self._tcross, self._nuars_tcross, self._nucutrs_tcross,   self._alphaDict["nuars"]["ISMcaseIIa"],\
-                                                                                                 self._tnuarseqnumrsPostCrossISMcaseIIa,     self._alphaDict["nuars"]["ISMcaseIIb"],   self._alphaDict["nucutrs"]["ISMcaseII"],   postcross = True)
-        self._tnuarseqnucutrsPostCrossISMcaseIIb  =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._nucutrs_tcross,   self._alphaDict["nuars"]["ISMcaseIIb"],   self._alphaDict["nucutrs"]["ISMcaseII"],   postcross = True)
-        self._tnuarseqnucutrsPostCrossISMcaseIIc  =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._nucutrs_tcross,   self._alphaDict["nuars"]["ISMcaseIIc"],   self._alphaDict["nucutrs"]["ISMcaseII"],   postcross = True)
-        self._tnuarseqnucutrsPostCrossWindCaseIa   = RSjetStruct._tnub1eqnub2double(self._tcross, self._nuars_tcross, self._nucutrs_tcross,  self._alphaDict["nuars"]["windCaseIa"],\
-                                                                                                  self._tnuarseqnumrsPostCrossWindCaseIa,    self._alphaDict["nuars"]["windCaseIb"],   self._alphaDict["nucutrs"]["windCaseI"],   postcross = True)
-        self._tnuarseqnucutrsPostCrossWindCaseIb   =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._nucutrs_tcross,  self._alphaDict["nuars"]["windCaseIb"],   self._alphaDict["nucutrs"]["windCaseI"],   postcross = True)
-        self._tnuarseqnucutrsPostCrossWindCaseIc   =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._nucutrs_tcross,  self._alphaDict["nuars"]["windCaseIc"],   self._alphaDict["nucutrs"]["windCaseI"],   postcross = True)
-        self._tnuarseqnucutrsPostCrossWindCaseIIa  = RSjetStruct._tnub1eqnub2double(self._tcross, self._nuars_tcross, self._nucutrs_tcross,  self._alphaDict["nuars"]["windCaseIIa"],\
-                                                                                                  self._tnuarseqnumrsPostCrossWindCaseIIa,   self._alphaDict["nuars"]["windCaseIIb"],  self._alphaDict["nucutrs"]["windCaseII"],  postcross = True)
-        self._tnuarseqnucutrsPostCrossWindCaseIIb  =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._nucutrs_tcross,  self._alphaDict["nuars"]["windCaseIIb"],  self._alphaDict["nucutrs"]["windCaseII"],  postcross = True)
-        self._tnuarseqnucutrsPostCrossWindCaseIIc  =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._nucutrs_tcross,  self._alphaDict["nuars"]["windCaseIIc"],  self._alphaDict["nucutrs"]["windCaseII"],  postcross = True)
+        if self._ISM:
+            self._tnuarseqnucutrsPostCrossISMcaseIa   = RSjetStruct._tnub1eqnub2double(self._tcross, self._nuars_tcross, self._nucutrs_tcross,   self._alphaDict["nuars"]["ISMcaseIa"],\
+                                                                                                     self._tnuarseqnumrsPostCrossISMcaseIa,      self._alphaDict["nuars"]["ISMcaseIb"],    self._alphaDict["nucutrs"]["ISMcaseI"],    postcross = True)
+            self._tnuarseqnucutrsPostCrossISMcaseIb   =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._nucutrs_tcross,   self._alphaDict["nuars"]["ISMcaseIb"],    self._alphaDict["nucutrs"]["ISMcaseI"],    postcross = True)
+            self._tnuarseqnucutrsPostCrossISMcaseIc   =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._nucutrs_tcross,   self._alphaDict["nuars"]["ISMcaseIc"],    self._alphaDict["nucutrs"]["ISMcaseI"],    postcross = True)
+            self._tnuarseqnucutrsPostCrossISMcaseIIa  = RSjetStruct._tnub1eqnub2double(self._tcross, self._nuars_tcross, self._nucutrs_tcross,   self._alphaDict["nuars"]["ISMcaseIIa"],\
+                                                                                                     self._tnuarseqnumrsPostCrossISMcaseIIa,     self._alphaDict["nuars"]["ISMcaseIIb"],   self._alphaDict["nucutrs"]["ISMcaseII"],   postcross = True)
+            self._tnuarseqnucutrsPostCrossISMcaseIIb  =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._nucutrs_tcross,   self._alphaDict["nuars"]["ISMcaseIIb"],   self._alphaDict["nucutrs"]["ISMcaseII"],   postcross = True)
+            self._tnuarseqnucutrsPostCrossISMcaseIIc  =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._nucutrs_tcross,   self._alphaDict["nuars"]["ISMcaseIIc"],   self._alphaDict["nucutrs"]["ISMcaseII"],   postcross = True)
+        else:
+            self._tnuarseqnucutrsPostCrossISMcaseIa   =       np.nan
+            self._tnuarseqnucutrsPostCrossISMcaseIb   =       np.nan
+            self._tnuarseqnucutrsPostCrossISMcaseIc   =       np.nan
+            self._tnuarseqnucutrsPostCrossISMcaseIIa  =       np.nan
+            self._tnuarseqnucutrsPostCrossISMcaseIIb  =       np.nan
+            self._tnuarseqnucutrsPostCrossISMcaseIIc  =       np.nan
+        
+        if not(self._ISM):
+            self._tnuarseqnucutrsPostCrossWindCaseIa   = RSjetStruct._tnub1eqnub2double(self._tcross, self._nuars_tcross, self._nucutrs_tcross,  self._alphaDict["nuars"]["windCaseIa"],\
+                                                                                                      self._tnuarseqnumrsPostCrossWindCaseIa,    self._alphaDict["nuars"]["windCaseIb"],   self._alphaDict["nucutrs"]["windCaseI"],   postcross = True)
+            self._tnuarseqnucutrsPostCrossWindCaseIb   =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._nucutrs_tcross,  self._alphaDict["nuars"]["windCaseIb"],   self._alphaDict["nucutrs"]["windCaseI"],   postcross = True)
+            self._tnuarseqnucutrsPostCrossWindCaseIc   =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._nucutrs_tcross,  self._alphaDict["nuars"]["windCaseIc"],   self._alphaDict["nucutrs"]["windCaseI"],   postcross = True)
+            self._tnuarseqnucutrsPostCrossWindCaseIIa  = RSjetStruct._tnub1eqnub2double(self._tcross, self._nuars_tcross, self._nucutrs_tcross,  self._alphaDict["nuars"]["windCaseIIa"],\
+                                                                                                      self._tnuarseqnumrsPostCrossWindCaseIIa,   self._alphaDict["nuars"]["windCaseIIb"],  self._alphaDict["nucutrs"]["windCaseII"],  postcross = True)
+            self._tnuarseqnucutrsPostCrossWindCaseIIb  =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._nucutrs_tcross,  self._alphaDict["nuars"]["windCaseIIb"],  self._alphaDict["nucutrs"]["windCaseII"],  postcross = True)
+            self._tnuarseqnucutrsPostCrossWindCaseIIc  =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._nucutrs_tcross,  self._alphaDict["nuars"]["windCaseIIc"],  self._alphaDict["nucutrs"]["windCaseII"],  postcross = True)
+        else:
+            self._tnuarseqnucutrsPostCrossWindCaseIa   =       np.nan
+            self._tnuarseqnucutrsPostCrossWindCaseIb   =       np.nan
+            self._tnuarseqnucutrsPostCrossWindCaseIc   =       np.nan
+            self._tnuarseqnucutrsPostCrossWindCaseIIa  =       np.nan
+            self._tnuarseqnucutrsPostCrossWindCaseIIb  =       np.nan
+            self._tnuarseqnucutrsPostCrossWindCaseIIc  =       np.nan
+            
         # post crossing time equalities for nuars and numrs slow cooling (double crossing)
-        self._tnuarseqnumrsPostCrossISMcaseIc      = RSjetStruct._tnub1eqnub2double(self._tcross, self._nuars_tcross, self._numrs_tcross,    self._alphaDict["nuars"]["ISMcaseIc"],\
-                                                                                                  self._tnuarseqnucutrsPostCrossISMcaseIc,   self._alphaDict["nuars"]["ISMcaseIb"],    self._alphaDict["numrs"]["ISMcaseI"],      postcross = True)
-        self._tnuarseqnumrsPostCrossISMcaseIIc     = RSjetStruct._tnub1eqnub2double(self._tcross, self._nuars_tcross, self._numrs_tcross,    self._alphaDict["nuars"]["ISMcaseIIc"],\
-                                                                                                  self._tnuarseqnucutrsPostCrossISMcaseIIc,  self._alphaDict["nuars"]["ISMcaseIIb"],   self._alphaDict["numrs"]["ISMcaseII"],     postcross = True)
-        self._tnuarseqnumrsPostCrossWindCaseIc     = RSjetStruct._tnub1eqnub2double(self._tcross, self._nuars_tcross, self._numrs_tcross,    self._alphaDict["nuars"]["windCaseIc"],\
-                                                                                                  self._tnuarseqnucutrsPostCrossWindCaseIc,  self._alphaDict["nuars"]["windCaseIb"],   self._alphaDict["numrs"]["windCaseI"],     postcross = True)
-        self._tnuarseqnumrsPostCrossWindCaseIIc    = RSjetStruct._tnub1eqnub2double(self._tcross, self._nuars_tcross, self._numrs_tcross,    self._alphaDict["nuars"]["windCaseIIc"],\
-                                                                                                  self._tnuarseqnucutrsPostCrossWindCaseIIc, self._alphaDict["nuars"]["windCaseIIb"],  self._alphaDict["numrs"]["windCaseII"],    postcross = True)
+        if self._ISM:
+            self._tnuarseqnumrsPostCrossISMcaseIc      = RSjetStruct._tnub1eqnub2double(self._tcross, self._nuars_tcross, self._numrs_tcross,    self._alphaDict["nuars"]["ISMcaseIc"],\
+                                                                                                      self._tnuarseqnucutrsPostCrossISMcaseIc,   self._alphaDict["nuars"]["ISMcaseIb"],    self._alphaDict["numrs"]["ISMcaseI"],      postcross = True)
+            self._tnuarseqnumrsPostCrossISMcaseIIc     = RSjetStruct._tnub1eqnub2double(self._tcross, self._nuars_tcross, self._numrs_tcross,    self._alphaDict["nuars"]["ISMcaseIIc"],\
+                                                                                                      self._tnuarseqnucutrsPostCrossISMcaseIIc,  self._alphaDict["nuars"]["ISMcaseIIb"],   self._alphaDict["numrs"]["ISMcaseII"],     postcross = True)
+        else:
+            self._tnuarseqnumrsPostCrossISMcaseIc      = np.nan
+            self._tnuarseqnumrsPostCrossISMcaseIIc     = np.nan
+        
+        if not(self._ISM):
+            self._tnuarseqnumrsPostCrossWindCaseIc     = RSjetStruct._tnub1eqnub2double(self._tcross, self._nuars_tcross, self._numrs_tcross,    self._alphaDict["nuars"]["windCaseIc"],\
+                                                                                                      self._tnuarseqnucutrsPostCrossWindCaseIc,  self._alphaDict["nuars"]["windCaseIb"],   self._alphaDict["numrs"]["windCaseI"],     postcross = True)
+            self._tnuarseqnumrsPostCrossWindCaseIIc    = RSjetStruct._tnub1eqnub2double(self._tcross, self._nuars_tcross, self._numrs_tcross,    self._alphaDict["nuars"]["windCaseIIc"],\
+                                                                                                      self._tnuarseqnucutrsPostCrossWindCaseIIc, self._alphaDict["nuars"]["windCaseIIb"],  self._alphaDict["numrs"]["windCaseII"],    postcross = True)
+        else:
+            self._tnuarseqnumrsPostCrossWindCaseIc     = np.nan
+            self._tnuarseqnumrsPostCrossWindCaseIIc    = np.nan
+            
         # pre crossing time equalities for nuars and numrs slow cooling
-        self._tnuarseqnumrsPreCrossISMcaseIIIa     =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._numrs_tcross,    self._alphaDict["nuars"]["ISMcaseIIIa"],  self._alphaDict["numrs"]["ISMcaseIII"],    postcross = False)
-        self._tnuarseqnumrsPreCrossISMcaseIIIb     =       np.nan # always np.nan
-        self._tnuarseqnumrsPreCrossISMcaseIIIc     =       np.nan # always np.nan
-        self._tnuarseqnumrsPreCrossWindCaseIIIa    =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._numrs_tcross,    self._alphaDict["nuars"]["windCaseIIIa"], self._alphaDict["numrs"]["windCaseIII"],   postcross = False)
-        self._tnuarseqnumrsPreCrossWindCaseIIIb    =       np.nan # always np.nan
-        self._tnuarseqnumrsPreCrossWindCaseIIIc    =       np.nan # always np.nan
+        if self._ISM:
+            self._tnuarseqnumrsPreCrossISMcaseIIIa     =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._numrs_tcross,    self._alphaDict["nuars"]["ISMcaseIIIa"],  self._alphaDict["numrs"]["ISMcaseIII"],    postcross = False)
+            self._tnuarseqnumrsPreCrossISMcaseIIIb     =       np.nan # always np.nan
+            self._tnuarseqnumrsPreCrossISMcaseIIIc     =       np.nan # always np.nan
+        else:
+            self._tnuarseqnumrsPreCrossISMcaseIIIa     =       np.nan
+            self._tnuarseqnumrsPreCrossISMcaseIIIb     =       np.nan
+            self._tnuarseqnumrsPreCrossISMcaseIIIc     =       np.nan
+        
+        if not(self._ISM):
+            self._tnuarseqnumrsPreCrossWindCaseIIIa    =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._numrs_tcross,    self._alphaDict["nuars"]["windCaseIIIa"], self._alphaDict["numrs"]["windCaseIII"],   postcross = False)
+            self._tnuarseqnumrsPreCrossWindCaseIIIb    =       np.nan # always np.nan
+            self._tnuarseqnumrsPreCrossWindCaseIIIc    =       np.nan # always np.nan
+        else:
+            self._tnuarseqnumrsPreCrossWindCaseIIIa    =       np.nan
+            self._tnuarseqnumrsPreCrossWindCaseIIIb    =       np.nan
+            self._tnuarseqnumrsPreCrossWindCaseIIIc    =       np.nan
+            
         # pre crossing time equalities for nuars and nucutrs slow cooling
-        self._tnuarseqnucutrsPreCrossISMcaseIIIa   =       np.nan # always np.nan
-        self._tnuarseqnucutrsPreCrossISMcaseIIIb   =       np.nan # always np.nan
-        self._tnuarseqnucutrsPreCrossISMcaseIIIc   =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._nucutrs_tcross,  self._alphaDict["nuars"]["ISMcaseIIIc"],  self._alphaDict["nucutrs"]["ISMcaseIII"],  postcross = False)
-        self._tnuarseqnucutrsPreCrossWindCaseIIIa  = RSjetStruct._tnub1eqnub2double(self._tcross, self._nuars_tcross, self._nucutrs_tcross,  self._alphaDict["nuars"]["windCaseIIIa"],\
-                                                                                                  self._tnuarseqnumrsPreCrossWindCaseIIIa,   self._alphaDict["nuars"]["windCaseIIIb"], self._alphaDict["nucutrs"]["windCaseIII"], postcross = False) # FIXME sometimes np.nan when it shouldn't be
-        self._tnuarseqnucutrsPreCrossWindCaseIIIb =        RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._nucutrs_tcross,  self._alphaDict["nuars"]["windCaseIIIb"], self._alphaDict["nucutrs"]["windCaseIII"], postcross = False)
-        self._tnuarseqnucutrsPreCrossWindCaseIIIc =        np.nan # always np.nan
+        if self._ISM:
+            self._tnuarseqnucutrsPreCrossISMcaseIIIa   =       np.nan # always np.nan
+            self._tnuarseqnucutrsPreCrossISMcaseIIIb   =       np.nan # always np.nan
+            self._tnuarseqnucutrsPreCrossISMcaseIIIc   =       RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._nucutrs_tcross,  self._alphaDict["nuars"]["ISMcaseIIIc"],  self._alphaDict["nucutrs"]["ISMcaseIII"],  postcross = False)
+        else:
+            self._tnuarseqnucutrsPreCrossISMcaseIIIa   =       np.nan 
+            self._tnuarseqnucutrsPreCrossISMcaseIIIb   =       np.nan
+            self._tnuarseqnucutrsPreCrossISMcaseIIIc   =       np.nan
+        
+        if not(self._ISM):
+            self._tnuarseqnucutrsPreCrossWindCaseIIIa  = RSjetStruct._tnub1eqnub2double(self._tcross, self._nuars_tcross, self._nucutrs_tcross,  self._alphaDict["nuars"]["windCaseIIIa"],\
+                                                                                                      self._tnuarseqnumrsPreCrossWindCaseIIIa,   self._alphaDict["nuars"]["windCaseIIIb"], self._alphaDict["nucutrs"]["windCaseIII"], postcross = False) # FIXME sometimes np.nan when it shouldn't be
+            self._tnuarseqnucutrsPreCrossWindCaseIIIb =        RSjetStruct._tnub1eqnub2(self._tcross, self._nuars_tcross, self._nucutrs_tcross,  self._alphaDict["nuars"]["windCaseIIIb"], self._alphaDict["nucutrs"]["windCaseIII"], postcross = False)
+            self._tnuarseqnucutrsPreCrossWindCaseIIIc =        np.nan # always np.nan
+        else:
+            self._tnuarseqnucutrsPreCrossWindCaseIIIa =        np.nan
+            self._tnuarseqnucutrsPreCrossWindCaseIIIb =        np.nan
+            self._tnuarseqnucutrsPreCrossWindCaseIIIc =        np.nan
         
         self._Fnumaxrs = self.Fnumaxrs()
         self._numrs = self.numrs()
@@ -978,6 +1044,15 @@ class RSjetStruct:
         
         return d
     
+    def silence_vectorized_warnings(func):
+        """Decorator to muzzle NumPy ufunc vectorized warnings at runtime. - Gemini"""
+        def wrapper(*args, **kwargs):
+            with warnings.catch_warnings(), np.errstate(over='ignore', divide='ignore', invalid='ignore'):
+                warnings.simplefilter("ignore", RuntimeWarning)
+                return func(*args, **kwargs)
+        return wrapper
+    
+    @silence_vectorized_warnings
     @np.vectorize
     def _tnub1eqnub2(tcross, nub1_tcross, nub2_tcross, alpha1, alpha2, postcross = True):
         """calculates the time at which two frequencies cross before or after 
@@ -986,40 +1061,23 @@ class RSjetStruct:
         """
         precross = not(postcross)
         
-        if abs(alpha1 - alpha2) < 0.05: #if alpha1 == alpha2:
+        if abs(alpha1 - alpha2) < 0.01: #if alpha1 == alpha2:
             return largeTime #np.nan
         else:
-            try:
-                t = (nub2_tcross**(1/(alpha1 - alpha2))/nub1_tcross**(1/(alpha1 - alpha2))) * tcross # FIXME problems with overflow at early times
-            except (OverflowError, ZeroDivisionError, FloatingPointError):
-                t = largeTime #np.nan #t = np.inf
+            with np.errstate(over = 'raise', divide = "raise", invalid = "raise"):
+                try:
+                    t = (nub2_tcross/nub1_tcross)**(1/(alpha1 - alpha2)) * tcross
+                except (OverflowError, ZeroDivisionError, FloatingPointError, RuntimeWarning):
+                    t = largeTime #np.nan #t = np.inf
+                        
             if postcross and t > tcross:
                 return t
             elif precross and t < tcross:
                 return t
             else:
                 return largeTime #np.nan
-        
-# =============================================================================
-#         precross = not(postcross)
-#         
-#         if alpha1 == alpha2:
-#             return np.nan
-#         else:
-#             try:
-#                 t = (nub2_tcross/nub1_tcross)**(1/(alpha1 - alpha2)) * tcross
-#             except (OverflowError, ZeroDivisionError):
-#                 t = np.nan # FIXME changed from np.inf to np.nan
-#             
-#             if postcross and t > tcross:
-#                 return t
-#             elif precross and t < tcross:
-#                 return t
-#             else:
-#                 return np.nan
-# =============================================================================
-    
-
+            
+    @silence_vectorized_warnings
     @np.vectorize
     def _tnub1eqnub2double(tcross, nub1_tcross, nub2_tcross, alpha1a, tAtoB, alpha1b, alpha2, postcross = True):
         """calculates the time at which two frequencies cross before or after 
@@ -1032,14 +1090,14 @@ class RSjetStruct:
         elif precross and tAtoB > tcross and tAtoB < largeTime:
             raise Exception("change in powerlaw should be before crossing time for postcross = False")
         
-        if abs(alpha1b - alpha2) < 0.05 or np.isnan(tAtoB) or tAtoB == largeTime: #if alpha1b == alpha2 or np.isnan(tAtoB):
+        if abs(alpha1b - alpha2) < 0.01 or np.isnan(tAtoB) or tAtoB == largeTime: #if alpha1b == alpha2 or np.isnan(tAtoB):
             return largeTime #np.nan
         else:
-            try:
-                #t = (nub2_tcross/nub1_tcross * tAtoB**(alpha1b - alpha1a) * tcross**(alpha1a - alpha2))**(1/(alpha1b - alpha2)) # FIXME finding incorrect crossing time for precross case a num=nucut
-                t = (nub2_tcross/nub1_tcross)**(1/(alpha1b - alpha2)) * tAtoB**((alpha1b - alpha1a)/(alpha1b - alpha2)) * tcross**((alpha1a - alpha2)/(alpha1b - alpha2))
-            except (OverflowError, ZeroDivisionError, FloatingPointError):
-                t = largeTime #t = np.nan  #t = np.inf
+            with np.errstate(over ='raise', divide = "raise", invalid = "raise"):
+                try:
+                    t = (nub2_tcross/nub1_tcross)**(1/(alpha1b - alpha2)) * tAtoB**((alpha1b - alpha1a)/(alpha1b - alpha2)) * tcross**((alpha1a - alpha2)/(alpha1b - alpha2))
+                except (OverflowError, ZeroDivisionError, FloatingPointError, RuntimeWarning):
+                    t = largeTime #t = np.nan  #t = np.inf
             
             if postcross and t > tAtoB:
                 return t
@@ -1047,30 +1105,3 @@ class RSjetStruct:
                 return t
             else:
                 return largeTime #np.nan
-        #
-# =============================================================================
-#         precross = not(postcross)
-#         
-#         if postcross and tAtoB < tcross:
-#             raise Exception("change in powerlaw should be after crossing time for postcross = True")
-#         elif precross and tAtoB > tcross:
-#             raise Exception("change in powerlaw should be before crossing time for postcross = False")
-#         
-#         if alpha1b == alpha2 or np.isnan(tAtoB):
-#             return np.nan
-#         else:
-#             try:
-#                 t = (nub2_tcross/nub1_tcross * tAtoB**(alpha1b - alpha1a) * tcross**(alpha1a - alpha2))**(1/(alpha1b - alpha2)) # FIXME finding incorrect crossing time for precross case a num=nucut
-#             except (OverflowError, ZeroDivisionError):
-#                 t = np.nan # FIXME changed from np.inf to np.nan
-#             
-#             if postcross and t > tAtoB:
-#                 return t
-#             elif precross and t < tAtoB:
-#                 return t
-#             else:
-#                 return np.nan
-# =============================================================================
-            
-            
-        
