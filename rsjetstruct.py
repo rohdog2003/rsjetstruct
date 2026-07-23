@@ -13,6 +13,222 @@ from .utilities import where # TODO implement this as needed
 smallNum = 1e-50 # a very small number close to zero
 largeTime = 1e7 # 1000000
 
+
+# ---- Vectorised GS02 spectrum helpers ------------------------------------
+# Module-level array-aware ports of the formulas in rsjetstruct.gsspectshapes.
+# The Spectrum class assumed scalar break frequencies and was called once
+# per (t, nu) point via @np.vectorize, which dominated profiling. These
+# helpers operate on full-length arrays so the whole RS spectrum is
+# computed in a handful of vectorised numpy calls.
+
+def _slope_v(b, p, k):
+    """Mirrors Spectrum._getSlope. Called at most O(1) times per RS spectrum."""
+    pick = (lambda a, c: a if k == 0 else c)
+    if b == 1:  return 2.0,         1.0/3.0,        pick(1.64,            1.06)
+    if b == 2:  return 1.0/3.0,     (1.0 - p)/2.0,  pick(1.84 - 0.40*p,   1.76 - 0.38*p)
+    if b == 3:  return (1.0 - p)/2.0, -p/2.0,       pick(1.15 - 0.06*p,   0.80 - 0.03*p)
+    if b == 4:  return 2.0,         5.0/2.0,        pick(3.44*p - 1.41,   3.63*p - 1.60)
+    if b == 5:  return 5.0/2.0,     (1.0 - p)/2.0,  pick(1.47 - 0.21*p,   1.25 - 0.18*p)
+    if b == 6:  return 5.0/2.0,     -p/2.0,         pick(0.94 - 0.14*p,   1.04 - 0.16*p)
+    if b == 7:  return 2.0,         11.0/8.0,       pick(1.99 - 0.04*p,   1.97 - 0.04*p)
+    if b == 8:  return 11.0/8.0,    -1.0/2.0,       pick(0.907,           0.893)
+    if b == 9:  return -1.0/2.0,    -p/2.0,         pick(3.34 - 0.82*p,   3.68 - 0.89*p)
+    if b == 10: return 11.0/8.0,    1.0/3.0,        pick(1.213,           1.213)
+    if b == 11: return 1.0/3.0,     -1.0/2.0,       pick(0.597,           0.597)
+    if b in (12, 13, 14, 15):
+        return float("nan"), float("nan"), pick(2.0, 2.0)
+    raise ValueError("slope index out of range: %r" % (b,))
+
+
+def _Fnub_v(nu, nub, Fnub, beta1, beta2, s):
+    """GS02 (1)."""
+    r = nu / nub
+    return Fnub * (r**(-s * beta1) + r**(-s * beta2))**(-1.0 / s)
+
+
+def _Fnu4_v(nu, nu4, Fnu4, beta1, beta2, s):
+    """GS02 (3). beta1/beta2 unused; matches Spectrum._Fnu4 signature."""
+    phi4 = nu / nu4
+    return Fnu4 * (phi4**2 * np.exp(-s * phi4**(2.0/3.0)) + phi4**(5.0/2.0))
+
+
+def _tildeFnub_v(nu, nub, beta1, beta2, s):
+    """GS02 (4)."""
+    return (1.0 + (nu/nub)**(s * (beta1 - beta2)))**(-1.0 / s)
+
+
+def _tildeFnuCUT12_v(nu, nuc, p, k):
+    """Array-aware port of Spectrum._tildeFnuCUT12 (cutoff for spectra 1,2)."""
+    s12 = _slope_v(12, p, k)[2]
+    slope3 = _slope_v(3, p, k)
+    mask = nu / nuc < 7e2
+    safe = np.where(mask, nu / nuc, 0.0)
+    tildeFnu3 = _tildeFnub_v(nu, nuc, *slope3)
+    tildeFnu3atnu3 = _tildeFnub_v(nuc, nuc, *slope3)
+    inner = (tildeFnu3**(-s12)
+             + tildeFnu3atnu3**(-s12) * np.exp(-s12) * (np.exp(s12 * safe) - 1.0))**(-1.0 / s12)
+    return np.where(mask, inner, 0.0)
+
+
+def _FnuCUT3_v(nu, Fnu4, nusa, num, nuc, p, k):
+    """Array-aware port of Spectrum._FnuCUT3 (cutoff for spectrum 3)."""
+    s13 = _slope_v(13, p, k)[2]
+    slope4 = _slope_v(4, p, k)
+    slope6 = _slope_v(6, p, k)
+    mask = nu / nuc < 7e2
+    safe = np.where(mask, nu / nuc, 0.0)
+    precut = _Fnu4_v(nu, num, Fnu4, *slope4) * _tildeFnub_v(nu, nusa, *slope6)
+    # Mirrors the upstream literal: _Fnu4 evaluated at nuc, _tildeFnub at nu.
+    precutatcut = _Fnu4_v(nuc, num, Fnu4, *slope4) * _tildeFnub_v(nu, nusa, *slope6)
+    inner = (precut**(-s13)
+             + precutatcut**(-s13) * np.exp(-s13) * (np.exp(s13 * safe) - 1.0))**(-1.0 / s13)
+    return np.where(mask, inner, 0.0)
+
+
+def _FnuCUT4_v(nu, Fnu7, nuac, nusa, num, nuc, p, k):
+    """Array-aware port of Spectrum._FnuCUT4 (cutoff for spectrum 4)."""
+    s14 = _slope_v(14, p, k)[2]
+    slope7 = _slope_v(7, p, k)
+    slope8 = _slope_v(8, p, k)
+    slope9 = _slope_v(9, p, k)
+    mask = nu / nuc < 7e2
+    safe = np.where(mask, nu / nuc, 0.0)
+    precut = (_Fnub_v(nu, nuac, Fnu7, *slope7)
+              * _tildeFnub_v(nu, nusa, *slope8)
+              * _tildeFnub_v(nu, num, *slope9))
+    precutatnu11 = (_Fnub_v(nuc, nuac, Fnu7, *slope7)
+                    * _tildeFnub_v(nuc, nusa, *slope8)
+                    * _tildeFnub_v(nuc, num, *slope9))
+    inner = (precut**(-s14)
+             + precutatnu11**(-s14) * np.exp(-s14) * (np.exp(s14 * safe) - 1.0))**(-1.0 / s14)
+    return np.where(mask, inner, 0.0)
+
+
+def _tildeFnuCUT5_v(nu, nuc, p, k):
+    """Array-aware port of Spectrum._tildeFnuCUT5 (cutoff for spectrum 5)."""
+    s15 = _slope_v(15, p, k)[2]
+    slope11 = _slope_v(11, p, k)
+    mask = nu / nuc < 7e2
+    safe = np.where(mask, nu / nuc, 0.0)
+    tildeFnu11 = _tildeFnub_v(nu, nuc, *slope11)
+    tildeFnu11atnu11 = _tildeFnub_v(nuc, nuc, *slope11)
+    inner = (tildeFnu11**(-s15)
+             + tildeFnu11atnu11**(-s15) * np.exp(-s15) * (np.exp(s15 * safe) - 1.0))**(-1.0 / s15)
+    return np.where(mask, inner, 0.0)
+
+
+def _classify_branch_v(nuac, nusa, num, nuc):
+    """Vectorised port of the Spectrum.spectrum() if/elif chain.
+
+    nuac is the absorption-coefficient floor (scalar smallNum in the RS path).
+    Assigns in reverse so earlier branches (matching the original if/elif
+    short-circuit order) win when multiple conditions hold.
+    """
+    n = nusa.shape[0]
+    branch = np.zeros(n, dtype=np.int8)
+    # spectrum 5: nuac <= nusa <= nuc <= num
+    branch[(nuac <= nusa) & (nusa <= nuc) & (nuc <= num)] = 5
+    # spectrum 4: nuac <= nusa AND nuc <= nusa AND nusa <= num
+    branch[(nuac <= nusa) & (nuc <= nusa) & (nusa <= num)] = 4
+    # spectrum 3: nuac <= nusa AND num <= nusa AND nuc <= nusa
+    branch[(nuac <= nusa) & (num <= nusa) & (nuc <= nusa)] = 3
+    # spectrum 2: nuac <= num <= nusa <= nuc
+    branch[(nuac <= num) & (num <= nusa) & (nusa <= nuc)] = 2
+    # spectrum 1: nuac <= nusa <= num <= nuc  (highest priority -> assigned last)
+    branch[(nuac <= nusa) & (nusa <= num) & (num <= nuc)] = 1
+    return branch
+
+
+def _obs_flux_max_v(Fnumax, nusa, num, nuc, p, branch, specnum_forced=None):
+    """Vectorised port of obsFluxMax. `branch` already encodes specnum per point.
+
+    The upstream obsFluxMax uses an activation gate
+        `cond_N * (specnum is None) + (specnum == N)`
+    on each branch's formula. In auto (specnum=None) mode the gate selects
+    the matching branch; under a forced specnum the gate forces that branch's
+    formulas to fire regardless of break ordering. Spectrum 3 is special: it
+    has two sub-formulas (3a: num<=nuc, 3b: num>nuc) each gated independently.
+    Under forced specnum=3 both sub-formulas activate and the result is their
+    sum; under auto mode the two are mutually exclusive on num vs nuc.
+    """
+    F = np.zeros_like(Fnumax)
+    is1 = branch == 1
+    is2 = branch == 2
+    is3 = branch == 3
+    is4 = branch == 4
+    is5 = branch == 5
+    F[is1] = Fnumax[is1]
+    F[is2] = Fnumax[is2] * (nusa[is2] / num[is2])**(-(p - 1.0)/2.0)
+    if specnum_forced == 3:
+        # Forced spec 3: the upstream gate `cond * 0 + 1` makes both sub-cases
+        # fire unconditionally, so the result is their sum.
+        F[is3] = (Fnumax[is3]
+                  * (nuc[is3] / num[is3])**(-(p - 1.0)/2.0)
+                  * (nusa[is3] / nuc[is3])**(-p/2.0)
+                + Fnumax[is3]
+                  * (num[is3] / nuc[is3])**(-0.5)
+                  * (nusa[is3] / num[is3])**(-p/2.0))
+    else:
+        is3a = is3 & (num <= nuc)
+        is3b = is3 & (num >  nuc)
+        F[is3a] = (Fnumax[is3a]
+                   * (nuc[is3a] / num[is3a])**(-(p - 1.0)/2.0)
+                   * (nusa[is3a] / nuc[is3a])**(-p/2.0))
+        F[is3b] = (Fnumax[is3b]
+                   * (num[is3b] / nuc[is3b])**(-0.5)
+                   * (nusa[is3b] / num[is3b])**(-p/2.0))
+    F[is4] = Fnumax[is4] * (nusa[is4] / nuc[is4])**(-0.5)
+    F[is5] = Fnumax[is5]
+    return F
+
+
+def _spectrum_branch_v(sn, nu, Fnumax, nuac, nusa, num, nuc, p, k, cut):
+    """Vectorised computation of GS02 spectrum branch `sn` for arrays.
+
+    `Fnumax` is the obs_flux_max'd peak flux (the same `_Fnutruemaxrs` the
+    scalar Spectrum class consumed). `cut` is the boolean array selecting
+    post-tcross points (or the override).
+    """
+    not_cut = ~cut
+    if sn == 1:
+        beta1_2 = _slope_v(2, p, k)[0]
+        Fnu1 = Fnumax * (nusa / num)**beta1_2
+        return (_Fnub_v(nu, nusa, Fnu1, *_slope_v(1, p, k))
+                * _tildeFnub_v(nu, num, *_slope_v(2, p, k))
+                * (not_cut * _tildeFnub_v(nu, nuc, *_slope_v(3, p, k))
+                   + cut * _tildeFnuCUT12_v(nu, nuc, p, k)))
+    if sn == 2:
+        beta1_5 = _slope_v(5, p, k)[0]
+        Fnu4 = Fnumax * (num / nusa)**beta1_5
+        return (_Fnu4_v(nu, num, Fnu4, *_slope_v(4, p, k))
+                * _tildeFnub_v(nu, nusa, *_slope_v(5, p, k))
+                * (not_cut * _tildeFnub_v(nu, nuc, *_slope_v(3, p, k))
+                   + cut * _tildeFnuCUT12_v(nu, nuc, p, k)))
+    if sn == 3:
+        beta1_5 = _slope_v(5, p, k)[0]
+        Fnu4 = Fnumax * (num / nusa)**beta1_5
+        return (not_cut * _Fnu4_v(nu, num, Fnu4, *_slope_v(4, p, k))
+                        * _tildeFnub_v(nu, nusa, *_slope_v(6, p, k))
+                + cut * _FnuCUT3_v(nu, Fnu4, nusa, num, nuc, p, k))
+    if sn == 4:
+        beta1_8 = _slope_v(8, p, k)[0]
+        # nuac is scalar smallNum in the RS path; broadcasts elementwise.
+        Fnu7 = Fnumax * (nuac / nusa)**beta1_8
+        return (not_cut * _Fnub_v(nu, nuac, Fnu7, *_slope_v(7, p, k))
+                        * _tildeFnub_v(nu, nusa, *_slope_v(8, p, k))
+                        * _tildeFnub_v(nu, num, *_slope_v(9, p, k))
+                + cut * _FnuCUT4_v(nu, Fnu7, nuac, nusa, num, nuc, p, k))
+    if sn == 5:
+        beta1_11 = _slope_v(11, p, k)[0]
+        beta1_10 = _slope_v(10, p, k)[0]
+        Fnu7 = Fnumax * (nusa / nuc)**beta1_11 * (nuac / nusa)**beta1_10
+        return (_Fnub_v(nu, nuac, Fnu7, *_slope_v(7, p, k))
+                * _tildeFnub_v(nu, nusa, *_slope_v(10, p, k))
+                * (not_cut * _tildeFnub_v(nu, nuc, *_slope_v(11, p, k))
+                            * _tildeFnub_v(nu, num, *_slope_v(9, p, k))
+                   + cut * _tildeFnuCUT5_v(nu, nuc, p, k)))
+    raise ValueError("unknown spectrum branch: %r" % (sn,))
+
 def obsFluxMax(Fnumax_nossa, nuac, nusa, num, nuc, p, specnum = None): # TODO add by specnum?
     """computes the observed maximum flux from the theoretical maximum if no
     synchrotron self absorption were to occur.
@@ -466,24 +682,64 @@ class RSjetStruct:
         
         return spect
             
-    @np.vectorize # TODO figure out a way to do without np.vectorize here to take advantage of spectrum.py's vectorization
+    @staticmethod
     def _spectrum(_tobs, _nu, _tcross, _Fnumaxrs, _numrs, _nucutrs, _nuars, _p, _k, diagnostic = False, specnum = None, decelerated = None):
-        """"""
-        _Fnutruemaxrs = obsFluxMax(_Fnumaxrs, smallNum, _nuars, _numrs, _nucutrs, p = _p, specnum = specnum)
-        
-        if decelerated is None:
-            cut = _tobs > _tcross
-        else:
-            cut = decelerated
-        
-        spec = Spectrum(_nu, _Fnutruemaxrs, smallNum, _nuars, _numrs, _nucutrs, p = _p, k = _k, cutoff = cut, specnum = specnum)
-        
-        nu, Fnu = spec.spectrum()
+        """Array-aware Granot-Sari spectrum dispatch.
 
-        if (diagnostic):
-            return _nuars, _numrs, _nucutrs, _Fnumaxrs # _Fnumaxrs was previously _Fnutruemaxrs which is incorrect since _Fnutruemaxrs includes SSA
-        else: 
-            return Fnu
+        Was previously @np.vectorize, which Python-looped per (t, nu) point
+        and dominated profiling. The replacement broadcasts the per-point
+        inputs, classifies the spectral branch (1..5) per point, and runs
+        one vectorised numpy pass per occupied branch via _spectrum_branch_v.
+        """
+        # Broadcast every "per-point" input to a common 1-D shape; preserve
+        # the scalar-in / scalar-out contract the np.vectorize version had.
+        scalar_inputs = all(np.ndim(x) == 0 for x in (_tobs, _nu, _Fnumaxrs, _numrs, _nucutrs, _nuars))
+        tobs, nu, Fnumax, num, nucut, nuar = (
+            np.atleast_1d(np.asarray(x, dtype=float))
+            for x in (_tobs, _nu, _Fnumaxrs, _numrs, _nucutrs, _nuars)
+        )
+        n = max(tobs.size, nu.size, Fnumax.size, num.size, nucut.size, nuar.size)
+        if tobs.size   < n: tobs   = np.broadcast_to(tobs,   (n,))
+        if nu.size     < n: nu     = np.broadcast_to(nu,     (n,))
+        if Fnumax.size < n: Fnumax = np.broadcast_to(Fnumax, (n,))
+        if num.size    < n: num    = np.broadcast_to(num,    (n,))
+        if nucut.size  < n: nucut  = np.broadcast_to(nucut,  (n,))
+        if nuar.size   < n: nuar   = np.broadcast_to(nuar,   (n,))
+
+        if diagnostic:
+            # Match the upstream @np.vectorize behaviour: a 4-tuple of arrays
+            # broadcast to the common shape. Scalars-in -> scalars-out.
+            if scalar_inputs:
+                return float(nuar[0]), float(num[0]), float(nucut[0]), float(Fnumax[0])
+            return nuar, num, nucut, Fnumax
+
+        if decelerated is None:
+            cut = tobs > _tcross
+        else:
+            cut = np.full(n, bool(decelerated))
+
+        if specnum is None:
+            branch = _classify_branch_v(smallNum, nuar, num, nucut)
+        else:
+            branch = np.full(n, int(specnum), dtype=np.int8)
+
+        Fnu_true = _obs_flux_max_v(Fnumax, nuar, num, nucut, _p, branch,
+                                   specnum_forced=specnum)
+
+        out = np.zeros(n, dtype=float)
+        for sn in (1, 2, 3, 4, 5):
+            mask = branch == sn
+            if not mask.any():
+                continue
+            out[mask] = _spectrum_branch_v(
+                sn, nu[mask], Fnu_true[mask], smallNum,
+                nuar[mask], num[mask], nucut[mask],
+                _p, _k, cut[mask],
+            )
+
+        if scalar_inputs:
+            return float(out[0])
+        return out
         
     @np.vectorize
     def _ISM(k):
